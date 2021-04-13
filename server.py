@@ -136,22 +136,26 @@ class Server(object):
         :param argument: str
         :return: None
         """
-        starting_room = self.room
-        if self.room == 0 and argument.lower() == 'north':
-            self.room = 3
-        elif self.room == 0 and argument.lower() == 'east':
-            self.room = 2
-        elif self.room == 0 and argument.lower() == 'west':
-            self.room = 1
-        elif self.room == 1 and argument.lower() == 'east':
-            self.room = 0
-        elif self.room == 2 and argument.lower() == 'west':
-            self.room = 0
-        elif self.room == 3 and argument.lower() == 'south':
-            self.room = 0
-        if self.room == starting_room:
+        new_room = False
+        arg = argument.lower().strip()
+        if self.room == 0 and arg == 'north':
+            print('hello from if statement')
+            new_room = 3
+        elif self.room == 0 and arg == 'east':
+            new_room = 2
+        elif self.room == 0 and arg == 'west':
+            new_room = 1
+        elif self.room == 1 and arg == 'east':
+            new_room = 0
+        elif self.room == 2 and arg == 'west':
+            new_room = 0
+        elif self.room == 3 and arg == 'south':
+            new_room = 0
+        
+        if new_room is False:
             self.output_buffer = f"The {argument.lower()}ern wall looks solid."
         else:
+            self.room = new_room
             self.output_buffer = self.room_description(self.room)
 
     def say(self, argument):
@@ -170,7 +174,7 @@ class Server(object):
 
         self.output_buffer = f'You say "{argument}"'
 
-    def quit(self, argument):
+    def quit(self, argument=None):
         """
         Quits the client from the server.
         
@@ -197,14 +201,14 @@ class Server(object):
         :return: None
         """
         try:
-            command, sentence = self.input_buffer.lower().split(' ',1)
-            self.input_buffer = getattr(self, command)(sentence)
+            command, arg = self.input_buffer.lower().split(' ', 1)
+            self.input_buffer = getattr(self, command)(arg)
         except ValueError:
             try:
                 self.input_buffer = getattr(self, self.input_buffer.decode('utf8').lower())
             except AttributeError:
-                self.output_buffer = ("The ancient and powerful magic of AttributeErrors "/
-                                      "prevents you from doing that.") 
+                self.output_buffer = ("The ancient and powerful magic of AttributeErrors "
+                                      "prevent you from doing that.") 
     def push_output(self):
         """
         Sends the contents of the output buffer to the client.
