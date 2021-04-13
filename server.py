@@ -108,8 +108,13 @@ class Server(object):
          
         :return: None 
         """
-
-        self.input_buffer = self.client_connection.recv().decode('utf8')
+        if self.input_buffer is None:
+            self.input_buffer = ''
+        while True:
+            chunk = self.client_connection.recv(10).decode('utf8')
+            self.input_buffer = self.input_buffer + chunk
+            if '\n' in chunk:
+                break
 
     def move(self, argument):
         """
@@ -196,6 +201,9 @@ class Server(object):
             self.input_buffer = getattr(self, command)(sentence)
         except ValueError:
             self.input_buffer = getattr(self, self.input_buffer.decode('utf8').lower())
+        except AttributeError:
+            self.output_buffer = ("The ancient and powerful magic of AttributeErrors "/
+                                  "prevents you from doing that.") 
     def push_output(self):
         """
         Sends the contents of the output buffer to the client.
@@ -206,7 +214,7 @@ class Server(object):
         :return: None 
         """
 
-        response = 'OK!'.encode('utf8')
+        response = 'OK! '.encode('utf8')
         response = response + self.output_buffer.encode('utf8')
         self.client_connection.sendall(response)
 
