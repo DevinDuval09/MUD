@@ -183,7 +183,6 @@ class Server(object):
         :param argument: str
         :return: None
         """
-
         self.output_buffer = 'Goodbye!'
         self.done = True
 
@@ -198,12 +197,13 @@ class Server(object):
         
         :return: None
         """
+        client_input = self.input_buffer.strip().lower()
         try:
-            command, arg = self.input_buffer.lower().split(' ', 1)
-            self.input_buffer = getattr(self, command)(arg)
+            command, arg = client_input.lower().split(' ', 1)
+            getattr(self, command)(arg)
         except ValueError:
             try:
-                self.input_buffer = getattr(self, self.input_buffer.decode('utf8').lower())
+                getattr(self, client_input)()
             except AttributeError:
                 self.output_buffer = ("The ancient and powerful magic of AttributeErrors "
                                       "prevent you from doing that.") 
