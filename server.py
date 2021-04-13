@@ -108,8 +108,7 @@ class Server(object):
          
         :return: None 
         """
-        if self.input_buffer is None:
-            self.input_buffer = ''
+        self.input_buffer = ''
         while True:
             chunk = self.client_connection.recv(10).decode('utf8')
             self.input_buffer = self.input_buffer + chunk
@@ -139,7 +138,6 @@ class Server(object):
         new_room = False
         arg = argument.lower().strip()
         if self.room == 0 and arg == 'north':
-            print('hello from if statement')
             new_room = 3
         elif self.room == 0 and arg == 'east':
             new_room = 2
