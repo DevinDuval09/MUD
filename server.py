@@ -200,10 +200,11 @@ class Server(object):
             command, sentence = self.input_buffer.lower().split(' ',1)
             self.input_buffer = getattr(self, command)(sentence)
         except ValueError:
-            self.input_buffer = getattr(self, self.input_buffer.decode('utf8').lower())
-        except AttributeError:
-            self.output_buffer = ("The ancient and powerful magic of AttributeErrors "/
-                                  "prevents you from doing that.") 
+            try:
+                self.input_buffer = getattr(self, self.input_buffer.decode('utf8').lower())
+            except AttributeError:
+                self.output_buffer = ("The ancient and powerful magic of AttributeErrors "/
+                                      "prevents you from doing that.") 
     def push_output(self):
         """
         Sends the contents of the output buffer to the client.
