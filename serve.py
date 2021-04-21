@@ -9,15 +9,23 @@ You should not need to make any changes in this file.
 
 
 import sys
-
+from multiprocessing import Process
+from time import sleep
 from server import Server
+
 
 try:
     port = int(sys.argv[1])
 except IndexError:
-    print("Please include a port number, eg: python serve.py 50000")
-    exit(-1)
+    port = 50000
 
 server = Server(port)
+#server_proc = Process(target=server.serve, args=())
 server.serve()
+
+if __name__ == '__main__':
+    #server_proc.start()
+    #server_proc.join()
+    server.serve()
+    sleep(1)
 

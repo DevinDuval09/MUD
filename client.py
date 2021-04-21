@@ -1,11 +1,13 @@
 import socket
 import sys
+from os import system
+
+#system('python -m serve')
 
 try:
     port = int(sys.argv[1])
 except IndexError:
-    print("Please include a port number, eg: python serve.py 50000")
-    exit(-1)
+    port = 50000
 
 try:
     host = sys.argv[2]
