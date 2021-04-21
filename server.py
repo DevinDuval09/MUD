@@ -1,5 +1,6 @@
 import socket
-
+from character import Character
+from room import rooms_dict
 
 class Server(object):
     """
@@ -25,7 +26,7 @@ class Server(object):
     When a client connects, they are greeted with a welcome message. And then they can
     move through the connected rooms. For example, on connection:
     
-    OK! Welcome to Realms of Venture! This room has brown wall paper!  (S)
+    OK! Welcome to Realms of Venture and dragons! This room has brown wall paper!  (S)
     move north                                                         (C)
     OK! This room has white wallpaper.                                 (S)
     say Hello? Is anyone here?                                         (C)
@@ -43,7 +44,8 @@ class Server(object):
     each room have a unique description.
     """
 
-    game_name = "Realms of Venture"
+    game_name = "Realms of Venture and dragons"
+    player = Character('Caleb')
 
     def __init__(self, port=50000):
         self.input_buffer = ""
@@ -52,8 +54,6 @@ class Server(object):
         self.socket = None
         self.client_connection = None
         self.port = port
-
-        self.room = 0
 
     def connect(self):
         self.socket = socket.socket(
@@ -67,23 +67,6 @@ class Server(object):
 
         self.client_connection, address = self.socket.accept()
 
-    def room_description(self, room_number):
-        """
-        For any room_number in 0, 1, 2, 3, return a string that "describes" that
-        room.
-
-        Ex: `self.room_number(1)` yields "Brown wallpaper covers the walls, bathing
-        the room in warm light reflected from the half-drawn curtains."
-
-        :param room_number: int
-        :return: str
-        """
-        rooms_dict = {0: 'A room with doors headed north, west, and east.',
-                      1: 'A room with a door headed east.',
-                      2: 'A room with a door headed west.',
-                      3: 'A room with a door headed south.'}
-        return rooms_dict[room_number]
-
     def greet(self):
         """
         Welcome a client to the game.
@@ -93,9 +76,10 @@ class Server(object):
         
         :return: None 
         """
-        self.output_buffer = "Welcome to {}! {}".format(
+        self.output_buffer = "Hello {}! Welcome to {}! {}".format(
+            self.player,
             self.game_name,
-            self.room_description(self.room)
+            rooms_dict[self.player.room]
         )
 
     def get_input(self):
@@ -115,62 +99,7 @@ class Server(object):
             if '\n' in chunk:
                 break
 
-    def move(self, argument):
-        """
-        Moves the client from one room to another.
-        
-        Examines the argument, which should be one of:
-        
-        * "north"
-        * "south"
-        * "east"
-        * "west"
-        
-        "Moves" the client into a new room by adjusting self.room to reflect the
-        number of the room that the client has moved into.
-        
-        Puts the room description (see `self.room_description`) for the new room
-        into "self.output_buffer".
-        
-        :param argument: str
-        :return: None
-        """
-        new_room = False
-        arg = argument.lower().strip()
-        if self.room == 0 and arg == 'north':
-            new_room = 3
-        elif self.room == 0 and arg == 'east':
-            new_room = 2
-        elif self.room == 0 and arg == 'west':
-            new_room = 1
-        elif self.room == 1 and arg == 'east':
-            new_room = 0
-        elif self.room == 2 and arg == 'west':
-            new_room = 0
-        elif self.room == 3 and arg == 'south':
-            new_room = 0
-        
-        if new_room is False:
-            self.output_buffer = f"The {argument.lower()}ern wall looks solid."
-        else:
-            self.room = new_room
-            self.output_buffer = self.room_description(self.room)
-
-    def say(self, argument):
-        """
-        Lets the client speak by putting their utterance into the output buffer.
-        
-        For example:
-        `self.say("Is there anybody here?")`
-        would put
-        `You say, "Is there anybody here?"`
-        into the output buffer.
-        
-        :param argument: str
-        :return: None
-        """
-
-        self.output_buffer = f'You say "{argument}"'
+    
 
     def quit(self, argument=None):
         """
@@ -200,13 +129,15 @@ class Server(object):
         client_input = self.input_buffer.strip().lower()
         try:
             command, arg = client_input.lower().split(' ', 1)
-            getattr(self, command)(arg)
+            self.output_buffer = getattr(self.player, command)(arg)
         except ValueError:
             try:
-                getattr(self, client_input)()
+                self.output_buffer = getattr(self.player, client_input)()
             except AttributeError:
-                self.output_buffer = ("The ancient and powerful magic of AttributeErrors "
-                                      "prevent you from doing that.") 
+                self.output_buffer = ("The ancient and powerful magic of AttributeErrors and text managment "
+                                      "prevent you from doing that for an unknown reason.")
+            except TypeError:
+                self.output_buffer = ("That command requires arguments. Try again.")
     def push_output(self):
         """
         Sends the contents of the output buffer to the client.
