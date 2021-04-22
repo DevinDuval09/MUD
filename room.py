@@ -1,8 +1,15 @@
 class Room(object):
     def __init__(self, number, description, inventory):
         self.number = number
-        self.description = description
+        self._description = description
         self.inventory = inventory
+    
+    def description(self):
+        '''Provide description of room along with any a list of interactable items'''
+        if self.inventory:
+            return self._description + f' In the room you see a {" ".join(self.inventory)}.'
+        else:
+            return self._description
 
 
 rooms_dict = {0: Room(0, 'A room with doors headed north, west, and east.', ['box']),
