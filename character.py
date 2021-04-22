@@ -64,7 +64,7 @@ class Character(object):
             new_room = 0
         
         if new_room is False:
-            return f"You bump your head against the {argument.lower()}ern wall. That was silly."
+            return f"You bump your head against the {argument.lower()}ern wall. That was dumb."
         else:
             self.room = new_room
             return rooms_dict[self.room].description()
