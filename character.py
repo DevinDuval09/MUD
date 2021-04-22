@@ -16,6 +16,14 @@ class Character(object):
         self.inventory = []
         self.room = 0
     
+    def actions(self):
+        attrs = dir(self)
+        actions = []
+        for attr in attrs:
+            if callable(getattr(self, attr)) and attr[:2] != '__':
+                actions.append(attr)
+        return f'Your available actions are {actions}.'
+    
     def grab(self, item):
         available_stuff = {rooms_dict[self.room]: rooms_dict[self.room].inventory}
         for thing in self.inventory:
@@ -120,7 +128,6 @@ class Character(object):
     def open(self, item):
         if item in self.inventory or rooms_dict[self.room].inventory:
             item = item_dict[item]
-            print(isinstance(item, Container))
             if isinstance(item, Container) and not item._open:
                 x = f'You open the {item.description()}. It contains {item.inventory}.'
                 item.open()
