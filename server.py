@@ -2,6 +2,8 @@ import socket
 from character import Character
 from room import rooms_dict
 
+#TODO: add item class to track item attributes
+#TODO: add server logging
 class Server(object):
     """
     An adventure game socket server
@@ -45,7 +47,7 @@ class Server(object):
     """
 
     game_name = "Realms of Venture and dragons"
-    player = Character('Caleb')
+    player = Character('Ghenghiz Cohen')
 
     def __init__(self, port=50000):
         self.input_buffer = ""
@@ -77,9 +79,9 @@ class Server(object):
         :return: None 
         """
         self.output_buffer = "Hello {}! Welcome to {}! {}".format(
-            self.player,
+            self.player.name,
             self.game_name,
-            rooms_dict[self.player.room]
+            rooms_dict[self.player.room].description()
         )
 
     def get_input(self):
@@ -127,17 +129,22 @@ class Server(object):
         :return: None
         """
         client_input = self.input_buffer.strip().lower()
-        try:
-            command, arg = client_input.lower().split(' ', 1)
-            self.output_buffer = getattr(self.player, command)(arg)
-        except ValueError:
+        print('client_input:', client_input)
+        print('quit' == client_input)
+        if client_input == 'quit':
+            self.quit()
+        else:
             try:
-                self.output_buffer = getattr(self.player, client_input)()
-            except AttributeError:
-                self.output_buffer = ("The ancient and powerful magic of AttributeErrors and text managment "
-                                      "prevent you from doing that for an unknown reason.")
-            except TypeError:
-                self.output_buffer = ("That command requires arguments. Try again.")
+                command, arg = client_input.lower().split(' ', 1)
+                self.output_buffer = getattr(self.player, command)(arg)
+            except ValueError:
+                try:
+                    self.output_buffer = getattr(self.player, client_input)()
+                except AttributeError:
+                    self.output_buffer = ("The ancient and powerful magic of AttributeErrors and text managment "
+                                          "prevent you from doing that for an unknown reason.")
+                except TypeError:
+                    self.output_buffer = ("That command requires arguments. Try again.")
     def push_output(self):
         """
         Sends the contents of the output buffer to the client.
