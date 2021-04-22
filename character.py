@@ -2,7 +2,6 @@
 from room import rooms_dict
 from items import item_dict, Container
 #TODO: add character classes
-#TODO: add commands method to get list of commands
 #TODO: add stats command that displays all stats data, including equipment and inventory buffs
 #TODO: add equipment
 class Character(object):
@@ -13,6 +12,13 @@ class Character(object):
     def __init__(self, name):
         self.name = name
         self.strength = 1
+        self.dexterity = 1
+        self.intelligence = 1
+        self.constitution = 1
+        self.wisdom = 1
+        self.charisma = 1
+        self.current_health = 10
+        self.armor = 0
         self.inventory = []
         self.room = 0
     
@@ -23,6 +29,34 @@ class Character(object):
             if callable(getattr(self, attr)) and attr[:2] != '__':
                 actions.append(attr)
         return f'Your available actions are {actions}.'
+    
+    def __get_stat(self, stat:str)->int:
+        '''
+        Calculate fully buffed value for stat
+        '''
+        level = getattr(self, stat)
+        for item in self.inventory:
+            item = item_dict[item]
+            if stat in dir(item):
+                level += getattr(item, stat)
+        return level
+
+    def stats(self):
+        character_stats = {'strength': 0,
+                           'dexterity': 0,
+                           'intelligence': 0,
+                           'constitution': 0,
+                           'wisdom': 0,
+                           'charisma': 0,
+                           'current_health': 0,
+                           'armor': 0}
+        for key in character_stats.keys():
+            character_stats[key] = self.__get_stat(key)
+        
+        summary = 'Your current stats are: '
+        for stat, value in character_stats.items():
+            summary += f'\n{stat}: {value}'
+        return summary
     
     def grab(self, item):
         available_stuff = {rooms_dict[self.room]: rooms_dict[self.room].inventory}
