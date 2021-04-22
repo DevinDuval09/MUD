@@ -29,6 +29,9 @@ class Character(object):
         for thing in self.inventory:
             if isinstance(item_dict[thing], Container) and item_dict[thing]._open:
                 available_stuff[item_dict[thing]] = item_dict[thing].inventory
+        for thing in rooms_dict[self.room].inventory:
+            if isinstance(item_dict[thing], Container) and item_dict[thing]._open:
+                available_stuff[item_dict[thing]] = item_dict[thing].inventory
         for container, inventory in available_stuff.items():
             if item in inventory:
                 container.inventory.remove(item)
