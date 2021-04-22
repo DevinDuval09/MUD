@@ -130,7 +130,6 @@ class Server(object):
         """
         client_input = self.input_buffer.strip().lower()
         print('client_input:', client_input)
-        print('quit' == client_input)
         if client_input == 'quit':
             self.quit()
         else:
@@ -145,6 +144,8 @@ class Server(object):
                                           "prevent you from doing that for an unknown reason.")
                 except TypeError:
                     self.output_buffer = ("That command requires arguments. Try again.")
+            except AttributeError:
+                self.output_buffer = f"You desparately try to {command}, but the AttributeErrors are too powerful."
     def push_output(self):
         """
         Sends the contents of the output buffer to the client.
