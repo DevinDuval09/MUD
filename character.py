@@ -1,5 +1,10 @@
 '''character class'''
 from room import rooms_dict
+from items import item_dict
+#TODO: add character classes
+#TODO: add commands method to get list of commands
+#TODO: add stats command that displays all stats data, including equipment and inventory buffs
+#TODO: add equipment
 class Character(object):
     '''
     Store information about characters and provide
@@ -77,7 +82,16 @@ class Character(object):
             description = rooms_dict[self.room].description()
         else:
             try:
-                description = argument.description()
+                if argument in self.inventory:
+                    item = item_dict[argument]
+                elif argument in rooms_dict[self.room].inventory:
+                    item = item_dict[argument]
+                else:
+                    item = None
+                if item:
+                    description = item.description()
+                else:
+                    description = f'You wish you had an {argument}.'
             except AttributeError:
                 description = rooms_dict[self.room].description()
         return f'{description}'

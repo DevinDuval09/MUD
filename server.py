@@ -1,8 +1,8 @@
 import socket
 from character import Character
 from room import rooms_dict
+from items import item_dict
 
-#TODO: add item class to track item attributes
 #TODO: add server logging
 class Server(object):
     """
