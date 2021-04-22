@@ -47,6 +47,7 @@ class Character(object):
         :param argument: str
         :return: None
         """
+        #TODO: Make this section easier to scale.
         new_room = False
         arg = argument.lower().strip()
         if self.room == 0 and arg == 'north':
@@ -63,22 +64,22 @@ class Character(object):
             new_room = 0
         
         if new_room is False:
-            return f"The {argument.lower()}ern wall looks solid."
+            return f"You bump your head against the {argument.lower()}ern wall. That was silly."
         else:
             self.room = new_room
-            return rooms_dict[self.room]
+            return rooms_dict[self.room].description()
 
     def look(self, argument=None):
         '''
         Repeat the view of the room or object
         '''
         if argument is None:
-            description = rooms_dict[self.room]
+            description = rooms_dict[self.room].description()
         else:
             try:
-                description = argument.description
+                description = argument.description()
             except AttributeError:
-                description = rooms_dict[self.room]
+                description = rooms_dict[self.room].description()
         return f'{description}'
 
     def say(self, argument):
