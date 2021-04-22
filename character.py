@@ -1,6 +1,6 @@
 '''character class'''
 from room import rooms_dict
-from items import item_dict
+from items import item_dict, Container
 #TODO: add character classes
 #TODO: add commands method to get list of commands
 #TODO: add stats command that displays all stats data, including equipment and inventory buffs
@@ -17,10 +17,15 @@ class Character(object):
         self.room = 0
     
     def grab(self, item):
-        if item in rooms_dict[self.room].inventory:
-            rooms_dict[self.room].inventory.remove(item)
-            self.inventory.append(item)
-            return f'You pick up a {item}.'
+        available_stuff = {rooms_dict[self.room]: rooms_dict[self.room].inventory}
+        for thing in self.inventory:
+            if isinstance(item_dict[thing], Container) and item_dict[thing]._open:
+                available_stuff[item_dict[thing]] = item_dict[thing].inventory
+        for container, inventory in available_stuff.items():
+            if item in inventory:
+                container.inventory.remove(item)
+                self.inventory.append(item)
+                return f'You pick up a {item} from {container._description}.'
         else:
             return f'You must be halucinating. There is no {item} in here.'
 
@@ -110,6 +115,21 @@ class Character(object):
         :return: None
         """
 
-        self.output_buffer = f'You say "{argument}"'
+        return f'You say "{argument}"'
+    
+    def open(self, item):
+        if item in self.inventory or rooms_dict[self.room].inventory:
+            item = item_dict[item]
+            print(isinstance(item, Container))
+            if isinstance(item, Container) and not item._open:
+                x = f'You open the {item.description()}. It contains {item.inventory}.'
+                item.open()
+                return x
+            elif isinstance(item, Container) and item._open:
+                return f'You feel that there is a deep philosophical question between trying to open an open {item.description}.'
+            elif not isinstance(item, Container):
+                return f'You desparately try to open the {item.description}, for reasons unknown, but it refuses to open.'
+        else:
+            f'There is no {item}.'
 
 
