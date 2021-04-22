@@ -1,5 +1,6 @@
 '''track item information'''
 #TODO: add container subclass
+#TODO: add equipment subclass
 class Item(object):
     def __init__(self, id, description, inventory=False, **stats):
         self.number = id
