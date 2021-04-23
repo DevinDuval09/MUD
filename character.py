@@ -1,9 +1,9 @@
 '''character class'''
 from room import rooms_dict
-from items import item_dict, Container
+from items import item_dict, Container, Equipment
 #TODO: add character classes
-#TODO: add stats command that displays all stats data, including equipment and inventory buffs
-#TODO: add equipment
+#TODO: add skills class that can inject commands to character object
+#TODO: add inventory command to review inventory
 class Character(object):
     '''
     Store information about characters and provide
@@ -11,15 +11,23 @@ class Character(object):
     '''
     def __init__(self, name):
         self.name = name
-        self.strength = 1
-        self.dexterity = 1
+        self.strength = 1 #melee to hit: str + skill bonus + roll/damage = weapon stat + roll + str bonus
+        self.dexterity = 1 #range to hit: dex + skill bonus + roll/damage = weapon stat + roll + dex bonus/initiative = roll + dex bonus
         self.intelligence = 1
-        self.constitution = 1
+        self.constitution = 1 #10 hp per const = max_health
         self.wisdom = 1
         self.charisma = 1
         self.current_health = 10
-        self.armor = 0
+        self.armor = 0 #armor = armor(from equipment/magic) + dex bonus? - overburden/to hit must beat armor
         self.inventory = []
+        self.skills = {}
+        self.equipment = {'head':None,
+                          'chest': None,
+                          'hands': None,
+                          'in hand': [None, None],
+                          'utility belt': None,
+                          'pants': None,
+                          'shoes': None}
         self.room = 0
     
     def actions(self):
@@ -37,8 +45,20 @@ class Character(object):
         level = getattr(self, stat)
         for item in self.inventory:
             item = item_dict[item]
-            if stat in dir(item):
-                level += getattr(item, stat)
+            if not isinstance(item, Equipment):
+                if stat in dir(item):
+                    level += getattr(item, stat)
+        for value in self.equipment.values():
+            if value and not isinstance(value, list):
+                item = item_dict[value]
+                if stat in dir(item):
+                    level += getattr(item, stat)
+            elif value and isinstance(value, list):
+                for desc in value:
+                    if desc:
+                        item = item_dict[desc]
+                        if stat in dir(item):
+                            level += getattr(item, stat)
         return level
 
     def stats(self):
@@ -175,5 +195,27 @@ class Character(object):
                 return f'You desparately try to open the {item.description}, for reasons unknown, but it refuses to open.'
         else:
             f'There is no {item}.'
+    
+    def equip(self, item):
+        if not isinstance(item_dict[item], Equipment):
+            return f'How do you intend to equip a {item}?'
+        equipment = item_dict[item]
+        print('player equipment: ', self.equipment)
+        print('equipment slot: ', equipment.slot)
+        if self.equipment[equipment.slot] is None and equipment.slot != 'in hand':
+            self.inventory.remove(equipment._description)
+            self.equipment[equipment.slot] = equipment._description
+            return f'You equipped the {equipment._description} on your {equipment.slot}.'
+        elif equipment.slot == 'in hand' and (None in self.equipment['in hand']):
+            self.inventory.remove(equipment._description)
+            if self.equipment['in hand'][0] == None:
+                self.equipment['in hand'][0] = equipment._description
+                print(self.equipment['in hand'])
+                return f"You take hold of a {equipment._description} in your main hand."
+            else:
+                self.equipment['in hand'][1] == equipment._description
+                return f'You take hold of a {equipment._description} in your off hand.'
+        else:
+            return f'You must first remove {self.equipment[equipment.slot]} from your {equipment.slot}.'
 
 

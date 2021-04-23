@@ -16,6 +16,6 @@ class Room(object):
 
 
 rooms_dict = {0: Room(0, 'A room with doors headed north, west, and east.', ['magic box']),
-              1: Room(1, 'A room with a door headed east.', []),
-              2: Room(2, 'A room with a door headed west.', []),
+              1: Room(1, 'A room with a door headed east.', ['steel sword']),
+              2: Room(2, 'A room with a door headed west.', ['wooden shield', 'chainmail shirt']),
               3: Room(3, 'A room with a door headed south.', [])}
