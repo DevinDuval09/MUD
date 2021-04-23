@@ -135,6 +135,7 @@ class Server(object):
         else:
             try:
                 command, arg = client_input.lower().split(' ', 1)
+                print('command, arg:', [command, arg])
                 self.output_buffer = getattr(self.player, command)(arg)
             except ValueError:
                 try:
