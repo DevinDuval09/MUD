@@ -33,7 +33,9 @@ class Character(object):
         attrs = dir(self)
         actions = []
         for attr in attrs:
-            if callable(getattr(self, attr)) and attr[1] != '_':
+            print('attr: ', attr)
+            print('attr[1]: ', attr[1])
+            if callable(getattr(self, attr)) and attr[1] != '_' and 'Character' not in attr:
                 actions.append(attr)
         return f'Your available actions are {actions}.'
     
