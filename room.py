@@ -1,10 +1,11 @@
 from items import item_dict
 
 class Room(object):
-    def __init__(self, number, description, inventory):
+    def __init__(self, number, description, inventory=[], exits={}):
         self.number = number
         self._description = description
         self.inventory = inventory
+        self.exits = exits
     
     def description(self):
         '''Provide description of room along with any a list of interactable items'''
@@ -15,7 +16,7 @@ class Room(object):
             return self._description
 
 
-rooms_dict = {0: Room(0, 'A room with doors headed north, west, and east.', ['magic box']),
-              1: Room(1, 'A room with a door headed east.', ['steel sword']),
-              2: Room(2, 'A room with a door headed west.', ['wooden shield', 'chainmail shirt']),
-              3: Room(3, 'A room with a door headed south.', [])}
+rooms_dict = {0: Room(0, 'A room with doors headed north, west, and east.', inventory=['magic box'], exits={'north': 3, 'west': 1, 'east': 2}),
+              1: Room(1, 'A room with a door headed east.', inventory=['steel sword'], exits={'east': 0}),
+              2: Room(2, 'A room with a door headed west.', inventory=['wooden shield', 'chainmail shirt'], exits={'west': 0}),
+              3: Room(3, 'A room with a door headed south.', exits={'south': 0})}
