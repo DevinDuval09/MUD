@@ -205,17 +205,25 @@ class Character(object):
         if self.equipment[equipment.slot] is None and equipment.slot != 'in hand':
             self.inventory.remove(equipment._description)
             self.equipment[equipment.slot] = equipment._description
-            return f'You equipped the {equipment._description} on your {equipment.slot}.'
+            response = f'You equipped the {equipment._description} on your {equipment.slot}.'
         elif equipment.slot == 'in hand' and (None in self.equipment['in hand']):
             self.inventory.remove(equipment._description)
             if self.equipment['in hand'][0] == None:
                 self.equipment['in hand'][0] = equipment._description
                 print(self.equipment['in hand'])
-                return f"You take hold of a {equipment._description} in your main hand."
+                response = f"You take hold of a {equipment._description} in your main hand."
             else:
                 self.equipment['in hand'][1] == equipment._description
-                return f'You take hold of a {equipment._description} in your off hand.'
+                response = f'You take hold of a {equipment._description} in your off hand.'
         else:
-            return f'You must first remove {self.equipment[equipment.slot]} from your {equipment.slot}.'
+            response = f'You must first remove {self.equipment[equipment.slot]} from your {equipment.slot}.'
+        
+        if 'remove' not in response:
+            print('equipment skills: ', equipment.skills)
+            for skill in equipment.skills:
+                setattr(self, skill.__name__, skill)
+                self.skills[equipment._description] = skill.__name__
+        return response
+
 
 
