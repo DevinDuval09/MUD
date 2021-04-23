@@ -2,7 +2,6 @@
 from room import rooms_dict
 from items import item_dict, Container, Equipment
 #TODO: add character classes
-#TODO: add skills class that can inject commands to character object
 #TODO: add inventory command to review inventory
 class Character(object):
     '''
@@ -34,7 +33,7 @@ class Character(object):
         attrs = dir(self)
         actions = []
         for attr in attrs:
-            if callable(getattr(self, attr)) and attr[:2] != '__':
+            if callable(getattr(self, attr)) and attr[1] != '_':
                 actions.append(attr)
         return f'Your available actions are {actions}.'
     
@@ -122,21 +121,11 @@ class Character(object):
         :param argument: str
         :return: None
         """
-        #TODO: Make this section easier to scale.
         new_room = False
+        current_room = rooms_dict[self.room]
         arg = argument.lower().strip()
-        if self.room == 0 and arg == 'north':
-            new_room = 3
-        elif self.room == 0 and arg == 'east':
-            new_room = 2
-        elif self.room == 0 and arg == 'west':
-            new_room = 1
-        elif self.room == 1 and arg == 'east':
-            new_room = 0
-        elif self.room == 2 and arg == 'west':
-            new_room = 0
-        elif self.room == 3 and arg == 'south':
-            new_room = 0
+        if arg in current_room.exits.keys():
+            new_room = current_room.exits[arg]
         
         if new_room is False:
             return f"You bump your head against the {argument.lower()}ern wall. That was dumb."
@@ -213,7 +202,7 @@ class Character(object):
                 print(self.equipment['in hand'])
                 response = f"You take hold of a {equipment._description} in your main hand."
             else:
-                self.equipment['in hand'][1] == equipment._description
+                self.equipment['in hand'][1] = equipment._description
                 response = f'You take hold of a {equipment._description} in your off hand.'
         else:
             response = f'You must first remove {self.equipment[equipment.slot]} from your {equipment.slot}.'
