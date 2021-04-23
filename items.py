@@ -2,6 +2,7 @@
 #TODO: add equipment subclass
 #TODO: add skills that give bonus
 #TODO: passive vs active skills
+from skills import block
 class Item(object):
     def __init__(self, id, description, inventory=False, **stats):
         self.number = id
@@ -36,6 +37,7 @@ class Equipment(Item):
     def __init__(self, id, description, slot, skills=[], **stats):
         super().__init__(id, description, **stats)
         self.slot = slot
+        self.skills = skills
     
 
 
@@ -43,6 +45,6 @@ class Equipment(Item):
 item_dict = {'magic box': Container(0, 'magic box', inventory_items=['magical crystal'], strength=2),
              'magical crystal': Item(1, 'magical crystal', strength=5),
              'steel sword': Equipment(2, 'steel sword', 'in hand'),
-             'wooden shield': Equipment(3, 'wooden shield', 'in hand', skills=['block'], armor=1),
+             'wooden shield': Equipment(3, 'wooden shield', 'in hand', skills=[block], armor=1),
              'chainmail shirt': Equipment(4, 'chainmail shirt', 'chest', armor=3)}
     
