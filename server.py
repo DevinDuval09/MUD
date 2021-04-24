@@ -3,6 +3,7 @@ from character import Character
 from room import rooms_dict
 from items import item_dict
 from random import randint
+#TODO: player inputs during combat
 
 def roll_d20():
     '''generate random number between 1 and 20'''
@@ -155,12 +156,7 @@ class Server(object):
             player.inventory.remove(item)
             rooms_dict[player.room].inventory.append(item)
         for slot, equipment in player.equipment.items():
-            if isinstance(equipment, list):
-                for item in equipment:
-                    if item:
-                        rooms_dict[player.room].inventory.append(item)
-                player.equipment[slot] = [None, None]
-            elif equipment:
+            if equipment:
                 rooms_dict[player.room].inventory.append(equipment)
                 player[slot] = None
         player.room = 0
@@ -187,9 +183,9 @@ class Server(object):
             init_rolls = {}
             to_hit_rolls = {}
             for character in [attacker, defender]:
-                print('main weapon: ', bool(character.equipment['in hand'][0]))
-                if character.equipment['in hand'][0]:
-                    weapon = item_dict[character.equipment['in hand'][0]]
+                print('main weapon: ', character.equipment['main hand'])
+                if character.equipment['main hand']:
+                    weapon = item_dict[character.equipment['main hand']]
                     hit_bonus[character] = character.proficiency_skills.get(weapon.associated_skill, 0)
                 else:
                     hit_bonus[character] = 0

@@ -3,6 +3,12 @@ from room import rooms_dict
 from items import item_dict, Container, Equipment
 #TODO: add character classes
 #TODO: add inventory command to review inventory
+#TODO: add customizable player descriptions
+#TODO: object permanence. mongodb?
+#TODO: documentation
+#TODO: active, passive combat commands
+#TODO: player creation sequence
+#TODO: add unequip command
 class Character(object):
     '''
     Store information about characters and provide
@@ -25,7 +31,8 @@ class Character(object):
         self.equipment = {'head':None,
                           'chest': None,
                           'hands': None,
-                          'in hand': [None, None],
+                          'main hand': None,
+                          'off hand': None,
                           'utility belt': None,
                           'pants': None,
                           'shoes': None}
@@ -53,16 +60,10 @@ class Character(object):
                 if stat in dir(item):
                     level += getattr(item, stat)
         for value in self.equipment.values():
-            if value and not isinstance(value, list):
+            if value:
                 item = item_dict[value]
                 if stat in dir(item):
                     level += getattr(item, stat)
-            elif value and isinstance(value, list):
-                for desc in value:
-                    if desc:
-                        item = item_dict[desc]
-                        if stat in dir(item):
-                            level += getattr(item, stat)
         return level
 
     def stats(self):
@@ -196,33 +197,33 @@ class Character(object):
         equipment = item_dict[item]
         print('player equipment: ', self.equipment)
         print('equipment slot: ', equipment.slot)
-        if self.equipment[equipment.slot] is None and equipment.slot != 'in hand':
+        if self.equipment[equipment.slot] is None:
+            #print(f'{self.name} inventory: ', self.inventory)
             self.inventory.remove(equipment._description)
             self.equipment[equipment.slot] = equipment._description
             response = f'You equipped the {equipment._description} on your {equipment.slot}.'
-        elif equipment.slot == 'in hand' and (None in self.equipment['in hand']):
-            self.inventory.remove(equipment._description)
-            if self.equipment['in hand'][0] == None:
-                self.equipment['in hand'][0] = equipment._description
-                print(self.equipment['in hand'])
-                response = f"You take hold of a {equipment._description} in your main hand."
-            else:
-                self.equipment['in hand'][1] = equipment._description
-                response = f'You take hold of a {equipment._description} in your off hand.'
+        elif self.equipment[equipment.slot] and equipment.slot[-4:] == 'hand':
+            if equipment.slot == 'main hand' and not self.equipment['off hand']:
+                self.equipment['off hand'] = equipment._description
+            if equipment.slot == 'off hand' and not self.equipment['main hand']:
+                self.equipment['main hand'] = equipment._description
         else:
             response = f'You must first remove {self.equipment[equipment.slot]} from your {equipment.slot}.'
         
         if 'remove' not in response:
-            #print('equipment skills: ', equipment.skills)
+            print('equipment: ', equipment._description)
+            print('equipment skills: ', equipment.active_skills)
             for skill in equipment.active_skills:
                 setattr(self, skill.__name__, skill)
                 self.active_skills[equipment._description] = skill.__name__
+            print('equipment skills: ', equipment.proficiency_skills)
             for skill, level in equipment.proficiency_skills.items():
                 if skill in self.proficiency_skills.keys():
                     self.proficiency_skills[skill] += level
                 else:
                     self.proficiency_skills[skill] = level
-            for skill in equipment.passive_skills.keys():
+            print('eqiupment skills: ', equipment.passive_skills)
+            for skill in equipment.passive_skills:
                 if skill not in self.passive_skills:
                     setattr(self, skill.__name__, skill)
         return response
