@@ -8,18 +8,20 @@ class Character(object):
     Store information about characters and provide
     commands for the characters to use.
     '''
-    def __init__(self, name):
+    def __init__(self, name, STR=1, DEX=1, INT=1, CON=1, WIS=1, CHA=1):
         self.name = name
-        self.strength = 1 #melee to hit: str + skill bonus + roll/damage = weapon stat + roll + str bonus
-        self.dexterity = 1 #range to hit: dex + skill bonus + roll/damage = weapon stat + roll + dex bonus/initiative = roll + dex bonus
-        self.intelligence = 1
-        self.constitution = 1 #10 hp per const = max_health
-        self.wisdom = 1
-        self.charisma = 1
-        self.current_health = 10
+        self.strength = STR #melee to hit: str + skill bonus + roll/damage = weapon stat + roll + str bonus
+        self.dexterity = DEX #range to hit: dex + skill bonus + roll/damage = weapon stat + roll + dex bonus/initiative = roll + dex bonus
+        self.intelligence = INT
+        self.constitution = CON #10 hp per const = max_health
+        self.wisdom = WIS
+        self.charisma = CHA
+        self.current_health = CHA * 10
         self.armor = 0 #armor = armor(from equipment/magic) + dex bonus? - overburden/to hit must beat armor
         self.inventory = []
-        self.skills = {}
+        self.active_skills = {}
+        self.proficiency_skills = {}
+        self.passive_skills = []
         self.equipment = {'head':None,
                           'chest': None,
                           'hands': None,
@@ -37,6 +39,7 @@ class Character(object):
             print('attr[1]: ', attr[1])
             if callable(getattr(self, attr)) and attr[1] != '_' and 'Character' not in attr:
                 actions.append(attr)
+        actions.append('attack')
         return f'Your available actions are {actions}.'
     
     def __get_stat(self, stat:str)->int:
@@ -210,11 +213,21 @@ class Character(object):
             response = f'You must first remove {self.equipment[equipment.slot]} from your {equipment.slot}.'
         
         if 'remove' not in response:
-            print('equipment skills: ', equipment.skills)
-            for skill in equipment.skills:
+            #print('equipment skills: ', equipment.skills)
+            for skill in equipment.active_skills:
                 setattr(self, skill.__name__, skill)
-                self.skills[equipment._description] = skill.__name__
+                self.active_skills[equipment._description] = skill.__name__
+            for skill, level in equipment.proficiency_skills.items():
+                if skill in self.proficiency_skills.keys():
+                    self.proficiency_skills[skill] += level
+                else:
+                    self.proficiency_skills[skill] = level
+            for skill in equipment.passive_skills.keys():
+                if skill not in self.passive_skills:
+                    setattr(self, skill.__name__, skill)
         return response
+
+    
 
 
 
