@@ -2,6 +2,15 @@ import socket
 from character import Character
 from room import rooms_dict
 from items import item_dict
+from random import randint
+
+def roll_d20():
+    '''generate random number between 1 and 20'''
+    return randint(1, 20)
+    
+def roll_d10():
+    '''generate random number between 1 and 10'''
+    return randint(1, 10)
 
 #TODO: add server logging
 class Server(object):
@@ -47,7 +56,12 @@ class Server(object):
     """
 
     game_name = "Realms of Venture and dragons"
-    player = Character('Ghenghiz Cohen')
+    player = Character('Ghenghiz Cohen', STR=5, DEX=5, INT=5, CON=5, CHA=5)
+    training_dummy = Character('training dummy')
+    training_dummy.inventory.append('magical crystal')
+    training_dummy.room = 3
+    character_dict = {'Ghengiz Cohen': player,
+                       'training dummy': training_dummy}
 
     def __init__(self, port=50000):
         self.input_buffer = ""
@@ -117,6 +131,109 @@ class Server(object):
         self.output_buffer = 'Goodbye!'
         self.done = True
 
+    def push_output(self):
+        """
+        Sends the contents of the output buffer to the client.
+        
+        This method should prepend "OK! " to the output and append "\n" before
+        sending it.
+        
+        :return: None 
+        """
+
+        response = 'OK! '.encode('utf8')
+        self.output_buffer += '\n'
+        response = response + self.output_buffer.encode('utf8')
+        self.client_connection.sendall(response)
+    
+    def kill_player(self, player:Character)->str:
+        '''do all of the stuff that needs to happen on player death.
+        mainly: equipment and inventory dump into the room they died.'''
+        print(f'{player.name} died.')
+        message = f"{player.name} falls to the ground, pooping his pants in death.\nHe drops {player.inventory}, {[item for item in player.equipment.values() if item is not None]}."
+        for item in player.inventory:
+            player.inventory.remove(item)
+            rooms_dict[player.room].inventory.append(item)
+        for slot, equipment in player.equipment.items():
+            if isinstance(equipment, list):
+                for item in equipment:
+                    if item:
+                        rooms_dict[player.room].inventory.append(item)
+                player.equipment[slot] = [None, None]
+            elif equipment:
+                rooms_dict[player.room].inventory.append(equipment)
+                player[slot] = None
+        player.room = 0
+        return message
+    
+    def inflict_damage(self, attacker:Character, defender:Character)->str:
+        damage = roll_d10() #damage roll
+        defender.current_health -= damage
+        message = f"{attacker.name} inflicts {damage} of damage onto {defender.name}."
+        return message
+    
+    def combat_exchange(self, attacker:Character, defender:Character, to_hit_rolls:dict)->str:
+        print('to hit stats for attacker: ', to_hit_rolls[attacker])
+        if to_hit_rolls[attacker] >= defender.armor:
+            message = self.inflict_damage(attacker, defender)
+        else:
+            message = f'{attacker.name} attack bounces off the armor of {defender.name}.'
+        return message
+    
+    def run_combat(self, attacker: Character, defender: Character):
+        while attacker.current_health > 0 and defender.current_health > 0:
+            #rolls
+            hit_bonus = {}
+            init_rolls = {}
+            to_hit_rolls = {}
+            for character in [attacker, defender]:
+                print('main weapon: ', bool(character.equipment['in hand'][0]))
+                if character.equipment['in hand'][0]:
+                    weapon = item_dict[character.equipment['in hand'][0]]
+                    hit_bonus[character] = character.proficiency_skills.get(weapon.associated_skill, 0)
+                else:
+                    hit_bonus[character] = 0
+            for character in [attacker, defender]:
+                init_rolls[character] = roll_d20() + character._Character__get_stat('dexterity')
+            for character in [attacker, defender]:
+                to_hit_rolls[character] = roll_d20() + hit_bonus[character]
+            # first player attacks
+            print('Creating players_turn_order')
+            players_turn_order = []
+            if init_rolls[attacker] >= init_rolls[defender]:
+                players_turn_order = [attacker, defender]
+            else:
+                players_turn_order = [defender, attacker]
+            
+            message = self.combat_exchange(players_turn_order[0], players_turn_order[1], to_hit_rolls)
+            # if to_hit_rolls[players_turn_order[0]] >= players_turn_order[1].armor:
+            #     message = self.inflict_damage(players_turn_order[0], players_turn_order[1])
+            #     self.output_buffer = message.encode('utf8')
+            #     self.push_output()
+            # else:
+            #     message = f'{players_turn_order[0].name} attack bounces off the armor of {players_turn_order[1].name}.'
+            self.output_buffer = message
+            self.push_output()
+
+            if players_turn_order[1].current_health <= 0:
+                self.output_buffer = self.kill_player(players_turn_order[1])
+                self.push_output()
+                break
+
+            message = self.combat_exchange(players_turn_order[1], players_turn_order[0], to_hit_rolls)
+            self.output_buffer = message
+            self.push_output()
+            print('attacker life: ', attacker.current_health)
+            print('defender life: ', defender.current_health)
+
+            if players_turn_order[0].current_health <= 0:
+                #print that someone died
+                self.output_buffer = self.kill_player(players_turn_order[0])
+                self.push_output()
+                break
+            print('attacker health: ', attacker.current_health)
+            print('defender health: ', defender.current_health)
+    
     def route(self):
         """
         Examines `self.input_buffer` to perform the correct action (move, quit, or
@@ -136,7 +253,13 @@ class Server(object):
             try:
                 command, arg = client_input.lower().split(' ', 1)
                 print('command, arg:', [command, arg])
-                self.output_buffer = getattr(self.player, command)(arg)
+                if command == 'attack':
+                    if arg in rooms_dict[self.player.room].characters:
+                        self.run_combat(self.player, self.character_dict[arg])
+                    else:
+                        self.output_buffer = 'Attack who?'
+                else:
+                    self.output_buffer = getattr(self.player, command)(arg)
             except ValueError:
                 try:
                     self.output_buffer = getattr(self.player, client_input)()
@@ -147,19 +270,6 @@ class Server(object):
                     self.output_buffer = ("That command requires arguments. Try again.")
             except AttributeError:
                 self.output_buffer = f"You desparately try to {command}, but the AttributeErrors are too powerful."
-    def push_output(self):
-        """
-        Sends the contents of the output buffer to the client.
-        
-        This method should prepend "OK! " to the output and append "\n" before
-        sending it.
-        
-        :return: None 
-        """
-
-        response = 'OK! '.encode('utf8')
-        response = response + self.output_buffer.encode('utf8')
-        self.client_connection.sendall(response)
 
     def serve(self):
         self.connect()
