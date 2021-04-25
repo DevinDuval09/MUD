@@ -1,6 +1,7 @@
 '''character class'''
 from room import rooms_dict
-from items import item_dict, Container, Equipment
+from server import item_dict
+from items import Container, Equipment
 #TODO: add character classes
 #TODO: add inventory command to review inventory
 #TODO: add customizable player descriptions
