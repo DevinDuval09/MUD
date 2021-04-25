@@ -45,10 +45,4 @@ class Equipment(Item):
 
 
     
-item_dict = {'magic box': Container(0, 'magic box', inventory_items=['magical crystal'], strength=2),
-             'magical crystal': Item(1, 'magical crystal', strength=5),
-             'steel sword': Equipment(2, 'steel sword', 'main hand', associated_skill='sword'),
-             'wooden shield': Equipment(3, 'wooden shield', 'off hand', associated_skill='shield', passive_skills=[block], armor=1),
-             'chainmail shirt': Equipment(4, 'chainmail shirt', 'chest', armor=3),
-             'book of butt kicking': Item(5, 'book of butt kicking', active_skills=[bash], proficiency_skills={'shield': 1, 'sword': 2})}
     

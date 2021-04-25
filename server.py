@@ -1,7 +1,8 @@
 import socket
 from character import Character
 from room import rooms_dict
-from items import item_dict, Equipment
+from items import item_dict, Item, Container, Equipment
+from skills import block, bash
 from random import randint
 #TODO: player inputs during combat
 
@@ -16,6 +17,13 @@ def roll_d10():
 def to_hit_roll(player:Character, weapon:Equipment)->int:
     bonus = player.proficiency_skills.get(weapon.associated_skill, 0)
     return roll_d20() + bonus
+
+item_dict = {'magic box': Container(0, 'magic box', inventory_items=['magical crystal'], strength=2),
+             'magical crystal': Item(1, 'magical crystal', strength=5),
+             'steel sword': Equipment(2, 'steel sword', 'main hand', associated_skill='sword'),
+             'wooden shield': Equipment(3, 'wooden shield', 'off hand', associated_skill='shield', passive_skills=[block], armor=1),
+             'chainmail shirt': Equipment(4, 'chainmail shirt', 'chest', armor=3),
+             'book of butt kicking': Item(5, 'book of butt kicking', active_skills=[bash], proficiency_skills={'shield': 1, 'sword': 2})}
 
 #TODO: add server logging
 class Server(object):
@@ -253,6 +261,9 @@ class Server(object):
             try:
                 command, arg = client_input.lower().split(' ', 1)
                 print('command, arg:', [command, arg])
+                if arg in self.character_dict.keys():
+                    self.output_buffer = getattr(self.player, command)(self.character_dict[arg])
+
                 if command == 'attack':
                     if arg in rooms_dict[self.player.room].characters:
                         self.run_combat(self.player, self.character_dict[arg])
