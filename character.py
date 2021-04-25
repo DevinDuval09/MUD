@@ -1,6 +1,5 @@
 '''character class'''
-from room import rooms_dict
-from server import item_dict
+from global_vars import item_dict, rooms_dict
 from items import Container, Equipment
 #TODO: add character classes
 #TODO: add inventory command to review inventory
@@ -84,7 +83,7 @@ class Character(object):
             summary += f'\n{stat}: {value}'
         return summary
     
-    def grab(self, item):
+    def grab(self, item:str)->str:
         available_stuff = {rooms_dict[self.room]: rooms_dict[self.room].inventory}
         for thing in self.inventory:
             if isinstance(item_dict[thing], Container) and item_dict[thing]._open:

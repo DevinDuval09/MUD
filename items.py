@@ -2,7 +2,6 @@
 #TODO: add equipment subclass
 #TODO: add skills that give bonus
 #TODO: passive vs active skills
-from skills import block, bash
 class Item(object):
     def __init__(self, id, description, active_skills=[], passive_skills= [], proficiency_skills={}, **stats):
         self.number = id

@@ -1,30 +1,8 @@
 import socket
 from character import Character
-from room import rooms_dict
-from items import item_dict, Item, Container, Equipment
-from skills import block, bash
-from random import randint
+from global_collections import rooms_dict, item_dict
+from global_funcs import roll_d10, roll_d20, to_hit_roll
 #TODO: player inputs during combat
-
-def roll_d20():
-    '''generate random number between 1 and 20'''
-    return randint(1, 20)
-    
-def roll_d10():
-    '''generate random number between 1 and 10'''
-    return randint(1, 10)
-
-def to_hit_roll(player:Character, weapon:Equipment)->int:
-    bonus = player.proficiency_skills.get(weapon.associated_skill, 0)
-    return roll_d20() + bonus
-
-item_dict = {'magic box': Container(0, 'magic box', inventory_items=['magical crystal'], strength=2),
-             'magical crystal': Item(1, 'magical crystal', strength=5),
-             'steel sword': Equipment(2, 'steel sword', 'main hand', associated_skill='sword'),
-             'wooden shield': Equipment(3, 'wooden shield', 'off hand', associated_skill='shield', passive_skills=[block], armor=1),
-             'chainmail shirt': Equipment(4, 'chainmail shirt', 'chest', armor=3),
-             'book of butt kicking': Item(5, 'book of butt kicking', active_skills=[bash], proficiency_skills={'shield': 1, 'sword': 2})}
-
 #TODO: add server logging
 class Server(object):
     """
