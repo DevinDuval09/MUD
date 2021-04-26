@@ -1,10 +1,10 @@
 import socket
-from global_vars import item_dict, rooms_dict
+from global_vars import item_dict, rooms_dict, training_dummy
 from character import Character
 from utilities import to_hit_roll, roll_d10, roll_d20
 #TODO: player inputs during combat
 #TODO: add server logging
-#TODO: server crashed: last two commands: grab magic box, open magic box
+#TODO: fix kill player
 class Server(object):
     """
     An adventure game socket server
@@ -49,8 +49,6 @@ class Server(object):
 
     game_name = "Realms of Venture and dragons"
     player = Character('Ghenghiz Cohen', rooms_dict[0], STR=5, DEX=5, INT=5, CON=5, CHA=5)
-    training_dummy = Character('training dummy', rooms_dict[3])
-    training_dummy.inventory.append(item_dict['book of butt kicking'])
     character_dict = {'Ghengiz Cohen': player,
                        'training dummy': training_dummy}
     object_dicts = [character_dict, rooms_dict, item_dict]
@@ -241,14 +239,16 @@ class Server(object):
                 command, arg = client_input.lower().split(' ', 1)
                 print('command, arg:', [command, arg])
                 for _dict in self.object_dicts:
+                    print('keys: ', _dict.keys())
+                    print('arg in keys: ', arg in _dict.keys())
                     if arg in _dict.keys():
                         arg = _dict[arg]
                         print(f'arg converted to object: {arg._description}.')
                         break
 
                 if command == 'attack':
-                    if arg in rooms_dict[self.player.room].characters:
-                        self.run_combat(self.player, self.character_dict[arg])
+                    if arg in self.player.room.characters:
+                        self.run_combat(self.player, arg)
                     else:
                         self.output_buffer = 'Attack who?'
                 elif command == 'move':
