@@ -13,7 +13,7 @@ class Room(object):
         if self.inventory:
             desc += f'\nIn the room you see a {" ".join([item.description() for item in self.inventory])}.'
         if self.characters:
-            desc += f'\nStanding in the room you see {self.characters}.'
+            desc += f'\nStanding in the room you see {[character.name for character in self.characters]}.'
         
         if self.exits.keys():
             desc += f'\n There are exits to the {self.exits.keys()}.'
