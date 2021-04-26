@@ -140,26 +140,36 @@ class Server(object):
         '''do all of the stuff that needs to happen on player death.
         mainly: equipment and inventory dump into the room they died.'''
         print(f'{player.name} died.')
-        message = f"{player.name} falls to the ground, pooping his pants in death.\nHe drops {player.inventory}, {[item for item in player.equipment.values() if item is not None]}."
+        print(f'{player.name} inventory: {[item._description for item in player.inventory]}')
+        print(f'{player.name} equipment: {[item._description for item in player.equipment.values() if bool(item) is True]}')
+        message = f"{player.name} falls to the ground, pooping his pants in death.\nHe drops {[item._description for item in player.inventory]} and {[item._description for item in player.equipment.values() if bool(item) is True]}."
+        print('message created')
         for item in player.inventory:
             player.inventory.remove(item)
-            rooms_dict[player.room].inventory.append(item)
+            player.room.inventory.append(item)
+        print('player inventory dropped')
         for slot, equipment in player.equipment.items():
             if equipment:
-                rooms_dict[player.room].inventory.append(equipment)
+                player.room.inventory.append(equipment)
                 player[slot] = None
-        player.room = 0
+        print('player equipment dropped')
+        #for key, room in rooms_dict.items():
+        #    if room is player.room:
+        #        room.characters.remove(player)
+        player.room.characters.remove(player)
+        player.room = None
         return message
     
     def inflict_damage(self, attacker:Character, defender:Character)->str:
-        damage = roll_d10() #damage roll
+        damage = roll_d10() + (attacker._Character__get_stat('strength') // 3) #damage roll
         defender.current_health -= damage
         message = f"{attacker.name} inflicts {damage} of damage onto {defender.name}."
         return message
     
     def combat_exchange(self, attacker:Character, defender:Character, to_hit_rolls:dict)->str:
         print('to hit stats for attacker: ', to_hit_rolls[attacker])
-        if to_hit_rolls[attacker] >= defender.armor:
+        print('armor calc for defender: ', defender._Character__get_stat('armor') + defender._Character__get_stat('dexterity') // 3)
+        if to_hit_rolls[attacker] >= (defender._Character__get_stat('armor') + (defender._Character__get_stat('dexterity') // 3)): #defender defense calc
             message = self.inflict_damage(attacker, defender)
         else:
             message = f'{attacker.name} attack bounces off the armor of {defender.name}.'
@@ -174,7 +184,7 @@ class Server(object):
             for character in [attacker, defender]:
                 print('main weapon: ', character.equipment['main hand'])
                 if character.equipment['main hand']:
-                    weapon = item_dict[character.equipment['main hand']]
+                    weapon = character.equipment['main hand']
                     hit_bonus[character] = character.proficiency_skills.get(weapon.associated_skill, 0)
                 else:
                     hit_bonus[character] = 0
