@@ -2,7 +2,7 @@ from random import randint
 from character import Character
 from items import Equipment
 
-
+#TODO: add get_object and connect to mongodb
 def roll_d20():
     '''generate random number between 1 and 20'''
     return randint(1, 20)
