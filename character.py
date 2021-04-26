@@ -78,14 +78,29 @@ class Character(object):
                            'constitution': 0,
                            'wisdom': 0,
                            'charisma': 0,
-                           'current_health': 0,
-                           'armor': 0}
+                           }
         for key in character_stats.keys():
             character_stats[key] = self.__get_stat(key)
         
         summary = 'Your current stats are: '
         for stat, value in character_stats.items():
+            summary += f'\n{stat}: {value}\tbonus: {value // 3}'
+        additional_stats = {'armor': self.__get_stat('armor'), 'current_health': self.__get_stat('current_health')}
+        for stat, value in additional_stats.items():
             summary += f'\n{stat}: {value}'
+        main_weapon = self.equipment['main hand']
+        if main_weapon:
+            bonus = self.proficiency_skills.get(self.equipment['main hand'].associated_skill, 0)
+        else:
+            bonus = 0
+        summary += f'\nmain hand to hit bonus: {bonus}'
+        armor_bonus = self.__get_stat('armor')
+        dex_bonus = self.__get_stat('dexterity') // 3
+        summary += f'\ntotal defense rating: {armor_bonus + dex_bonus}'
+        summary += '\nProficiencies:'
+        for proficiency, rating in self.proficiency_skills.items():
+            summary += f'\n{proficiency}: {rating}'
+        print(f'{self.name}stats: \nsummary')
         return summary
     
     def grab(self, thing:Item)->str:
