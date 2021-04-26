@@ -240,10 +240,11 @@ class Server(object):
             try:
                 command, arg = client_input.lower().split(' ', 1)
                 print('command, arg:', [command, arg])
-                #for _dict in self.object_dicts:
-                #    if arg in _dict.keys():
-                #        arg = _dict[arg]
-                #        break
+                for _dict in self.object_dicts:
+                    if arg in _dict.keys():
+                        arg = _dict[arg]
+                        print(f'arg converted to object: {arg._description}.')
+                        break
 
                 if command == 'attack':
                     if arg in rooms_dict[self.player.room].characters:

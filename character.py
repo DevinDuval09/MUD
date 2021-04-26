@@ -9,8 +9,7 @@ from items import Item, Container, Equipment
 #TODO: active, passive combat commands
 #TODO: player creation sequence
 #TODO: add unequip command
-#TODO: fix equip
-#TODO: fix open
+#TODO: fix attack
 class Character(object):
     '''
     Store information about characters and provide
@@ -55,13 +54,15 @@ class Character(object):
         '''
         Calculate fully buffed value for stat
         '''
+        print('stat: ', stat)
         level = getattr(self, stat)
         for item in self.inventory:
             if not isinstance(item, Equipment):
                 if stat in dir(item):
                     level += getattr(item, stat)
-        for value in self.equipment.values():
-            if value:
+        for item in self.equipment.values():
+            if item:
+                print('item: ', item._description)
                 if stat in dir(item):
                     level += getattr(item, stat)
         return level
@@ -83,7 +84,8 @@ class Character(object):
             summary += f'\n{stat}: {value}'
         return summary
     
-    def grab(self, item:Item)->str:
+    def grab(self, thing:Item)->str:
+        print('grab item: ', thing._description)
         available_stuff = {self.room: self.room.inventory}
         for item in self.inventory:
             #check inventory for open containers
@@ -94,12 +96,12 @@ class Character(object):
             if isinstance(item, Container) and item._open:
                 available_stuff[item] = item.inventory
         for container, inventory in available_stuff.items():
-            if item in inventory:
-                container.inventory.remove(item)
-                self.inventory.append(item)
-                return f'You pick up a {item._description} from {container._description}.'
+            if thing in inventory:
+                container.inventory.remove(thing)
+                self.inventory.append(thing)
+                return f'You pick up a {thing._description} from {container._description}.'
         else:
-            return f'You must be halucinating. There is no {item._description} in here.'
+            return f'You must be halucinating. There is no {thing._description} in here.'
 
     def drop(self, item):
         if item in self.inventory:
@@ -177,7 +179,7 @@ class Character(object):
     def open(self, item:Item)->str:
         if item in self.inventory or self.room.inventory:
             if isinstance(item, Container) and not item._open:
-                message = f'You open the {item.description()}. It contains {item.inventory}.'
+                message = f'You open the {item.description()}. It contains {[thing._description for thing in item.inventory]}.'
                 item.open()
                 return message
             elif isinstance(item, Container) and item._open:
