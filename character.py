@@ -15,7 +15,7 @@ class Character(object):
     Store information about characters and provide
     commands for the characters to use.
     '''
-    def __init__(self, name:str, spawn_point:Room, STR:int=1, DEX:int=1, INT:int=1, CON:int=1, WIS:int=1, CHA:int=1):
+    def __init__(self, name:str, spawn_point:Room, desc=None, STR:int=1, DEX:int=1, INT:int=1, CON:int=1, WIS:int=1, CHA:int=1):
         self.name = name
         self.strength = STR #melee to hit: str + skill bonus + roll/damage = weapon stat + roll + str bonus
         self.dexterity = DEX #range to hit: dex + skill bonus + roll/damage = weapon stat + roll + dex bonus/initiative = roll + dex bonus
@@ -38,6 +38,10 @@ class Character(object):
                           'pants': None,
                           'shoes': None}
         self.room = spawn_point
+        if desc is None:
+            self._description = name
+        else:
+            self._description = desc
     
     def actions(self):
         attrs = dir(self)
