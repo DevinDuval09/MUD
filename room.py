@@ -1,4 +1,3 @@
-from global_collections import item_dict
 
 class Room(object):
     def __init__(self, number, description, inventory=[], characters=[], exits={}):
@@ -12,7 +11,7 @@ class Room(object):
         '''Provide description of room along with any a list of interactable items'''
         desc = self._description
         if self.inventory:
-            desc += f'\nIn the room you see a {" ".join([item_dict[item].description() for item in self.inventory])}.'
+            desc += f'\nIn the room you see a {" ".join([item.description() for item in self.inventory])}.'
         if self.characters:
             desc += f'\nStanding in the room you see {self.characters}.'
         

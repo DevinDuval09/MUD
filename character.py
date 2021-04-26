@@ -1,6 +1,6 @@
 '''character class'''
-from global_vars import item_dict, rooms_dict
-from items import Container, Equipment
+from room import Room
+from items import Item, Container, Equipment
 #TODO: add character classes
 #TODO: add inventory command to review inventory
 #TODO: add customizable player descriptions
@@ -9,12 +9,14 @@ from items import Container, Equipment
 #TODO: active, passive combat commands
 #TODO: player creation sequence
 #TODO: add unequip command
+#TODO: fix equip
+#TODO: fix open
 class Character(object):
     '''
     Store information about characters and provide
     commands for the characters to use.
     '''
-    def __init__(self, name, STR=1, DEX=1, INT=1, CON=1, WIS=1, CHA=1):
+    def __init__(self, name:str, spawn_point:Room, STR:int=1, DEX:int=1, INT:int=1, CON:int=1, WIS:int=1, CHA:int=1):
         self.name = name
         self.strength = STR #melee to hit: str + skill bonus + roll/damage = weapon stat + roll + str bonus
         self.dexterity = DEX #range to hit: dex + skill bonus + roll/damage = weapon stat + roll + dex bonus/initiative = roll + dex bonus
@@ -36,7 +38,7 @@ class Character(object):
                           'utility belt': None,
                           'pants': None,
                           'shoes': None}
-        self.room = 0
+        self.room = spawn_point
     
     def actions(self):
         attrs = dir(self)
@@ -55,13 +57,11 @@ class Character(object):
         '''
         level = getattr(self, stat)
         for item in self.inventory:
-            item = item_dict[item]
             if not isinstance(item, Equipment):
                 if stat in dir(item):
                     level += getattr(item, stat)
         for value in self.equipment.values():
             if value:
-                item = item_dict[value]
                 if stat in dir(item):
                     level += getattr(item, stat)
         return level
@@ -83,26 +83,28 @@ class Character(object):
             summary += f'\n{stat}: {value}'
         return summary
     
-    def grab(self, item:str)->str:
-        available_stuff = {rooms_dict[self.room]: rooms_dict[self.room].inventory}
-        for thing in self.inventory:
-            if isinstance(item_dict[thing], Container) and item_dict[thing]._open:
-                available_stuff[item_dict[thing]] = item_dict[thing].inventory
-        for thing in rooms_dict[self.room].inventory:
-            if isinstance(item_dict[thing], Container) and item_dict[thing]._open:
-                available_stuff[item_dict[thing]] = item_dict[thing].inventory
+    def grab(self, item:Item)->str:
+        available_stuff = {self.room: self.room.inventory}
+        for item in self.inventory:
+            #check inventory for open containers
+            if isinstance(item, Container) and item._open:
+                available_stuff[item] = item.inventory
+        for item in self.room.inventory:
+            #check items in room for open containers
+            if isinstance(item, Container) and item._open:
+                available_stuff[item] = item.inventory
         for container, inventory in available_stuff.items():
             if item in inventory:
                 container.inventory.remove(item)
                 self.inventory.append(item)
-                return f'You pick up a {item} from {container._description}.'
+                return f'You pick up a {item._description} from {container._description}.'
         else:
-            return f'You must be halucinating. There is no {item} in here.'
+            return f'You must be halucinating. There is no {item._description} in here.'
 
     def drop(self, item):
         if item in self.inventory:
             self.inventory.remove(item)
-            rooms_dict[self.room].inventory.append(item)
+            self.room.inventory.append(item)
             return f'You drop a {item}.'
         else:
             return f'You are not carrying a {item}.'
@@ -127,30 +129,25 @@ class Character(object):
         :param argument: str
         :return: None
         """
-        new_room = False
-        current_room = rooms_dict[self.room]
-        arg = argument.lower().strip()
-        if arg in current_room.exits.keys():
-            new_room = current_room.exits[arg]
-        
-        if new_room is False:
+        new_room = argument
+        if not new_room:
             return f"You bump your head against the {argument.lower()}ern wall. That was dumb."
         else:
             self.room = new_room
-            return rooms_dict[self.room].description()
+            return self.room.description()
 
     def look(self, argument=None):
         '''
         Repeat the view of the room or object
         '''
         if argument is None:
-            description = rooms_dict[self.room].description()
+            description = self.room.description()
         else:
             try:
                 if argument in self.inventory:
-                    item = item_dict[argument]
-                elif argument in rooms_dict[self.room].inventory:
-                    item = item_dict[argument]
+                    item = item._description
+                elif argument in self.room.inventory:
+                    item = item._description
                 else:
                     item = None
                 if item:
@@ -158,7 +155,7 @@ class Character(object):
                 else:
                     description = f'You wish you had an {argument}.'
             except AttributeError:
-                description = rooms_dict[self.room].description()
+                description = self.room.description()
         return f'{description}'
 
     def say(self, argument):
@@ -177,13 +174,12 @@ class Character(object):
 
         return f'You say "{argument}"'
     
-    def open(self, item):
-        if item in self.inventory or rooms_dict[self.room].inventory:
-            item = item_dict[item]
+    def open(self, item:Item)->str:
+        if item in self.inventory or self.room.inventory:
             if isinstance(item, Container) and not item._open:
-                x = f'You open the {item.description()}. It contains {item.inventory}.'
+                message = f'You open the {item.description()}. It contains {item.inventory}.'
                 item.open()
-                return x
+                return message
             elif isinstance(item, Container) and item._open:
                 return f'You feel that there is a deep philosophical question between trying to open an open {item.description}.'
             elif not isinstance(item, Container):
@@ -191,24 +187,26 @@ class Character(object):
         else:
             f'There is no {item}.'
     
-    def equip(self, item):
-        if not isinstance(item_dict[item], Equipment):
-            return f'How do you intend to equip a {item}?'
-        equipment = item_dict[item]
-        print('player equipment: ', self.equipment)
+    def equip(self, item: Equipment)->str: #not working
+        if not isinstance(item, Equipment):
+            return f'How do you intend to equip a {item.description()}?'
+        equipment = item
+        print('player equipment: ', equipment._description)
         print('equipment slot: ', equipment.slot)
         if self.equipment[equipment.slot] is None:
             #print(f'{self.name} inventory: ', self.inventory)
-            self.inventory.remove(equipment._description)
-            self.equipment[equipment.slot] = equipment._description
+            self.inventory.remove(equipment)
+            self.equipment[equipment.slot] = equipment
             response = f'You equipped the {equipment._description} on your {equipment.slot}.'
         elif self.equipment[equipment.slot] and equipment.slot[-4:] == 'hand':
             if equipment.slot == 'main hand' and not self.equipment['off hand']:
-                self.equipment['off hand'] = equipment._description
+                self.equipment['off hand'] = equipment
+                response = f'You take hold of the {equipment._description} in your off hand.'
             if equipment.slot == 'off hand' and not self.equipment['main hand']:
-                self.equipment['main hand'] = equipment._description
+                self.equipment['main hand'] = equipment
+                response = f'You take hold of the {equipment._description} in your main hand.'
         else:
-            response = f'You must first remove {self.equipment[equipment.slot]} from your {equipment.slot}.'
+            response = f'You must first remove {self.equipment[equipment.slot]._description} from your {equipment.slot}.'
         
         if 'remove' not in response:
             print('equipment: ', equipment._description)
@@ -227,8 +225,3 @@ class Character(object):
                 if skill not in self.passive_skills:
                     setattr(self, skill.__name__, skill)
         return response
-
-    
-
-
-

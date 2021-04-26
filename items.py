@@ -40,7 +40,7 @@ class Equipment(Item):
         super().__init__(id, description, active_skills=active_skills, proficiency_skills=proficiency_skills, **stats)
         self.slot = slot
         self.associated_skill = associated_skill
-    
+
 
 
     

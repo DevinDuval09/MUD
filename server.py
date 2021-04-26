@@ -1,9 +1,10 @@
 import socket
+from global_vars import item_dict, rooms_dict
 from character import Character
-from global_collections import rooms_dict, item_dict
-from global_funcs import roll_d10, roll_d20, to_hit_roll
+from utilities import to_hit_roll, roll_d10, roll_d20
 #TODO: player inputs during combat
 #TODO: add server logging
+#TODO: server crashed: last two commands: grab magic box, open magic box
 class Server(object):
     """
     An adventure game socket server
@@ -47,12 +48,12 @@ class Server(object):
     """
 
     game_name = "Realms of Venture and dragons"
-    player = Character('Ghenghiz Cohen', STR=5, DEX=5, INT=5, CON=5, CHA=5)
-    training_dummy = Character('training dummy')
-    training_dummy.inventory.append('magical crystal')
-    training_dummy.room = 3
+    player = Character('Ghenghiz Cohen', rooms_dict[0], STR=5, DEX=5, INT=5, CON=5, CHA=5)
+    training_dummy = Character('training dummy', rooms_dict[3])
+    training_dummy.inventory.append(item_dict['book of butt kicking'])
     character_dict = {'Ghengiz Cohen': player,
                        'training dummy': training_dummy}
+    object_dicts = [character_dict, rooms_dict, item_dict]
 
     def __init__(self, port=50000):
         self.input_buffer = ""
@@ -86,7 +87,7 @@ class Server(object):
         self.output_buffer = "Hello {}! Welcome to {}! {}".format(
             self.player.name,
             self.game_name,
-            rooms_dict[self.player.room].description()
+            self.player.room.description()
         )
 
     def get_input(self):
@@ -239,14 +240,22 @@ class Server(object):
             try:
                 command, arg = client_input.lower().split(' ', 1)
                 print('command, arg:', [command, arg])
-                if arg in self.character_dict.keys():
-                    self.output_buffer = getattr(self.player, command)(self.character_dict[arg])
+                #for _dict in self.object_dicts:
+                #    if arg in _dict.keys():
+                #        arg = _dict[arg]
+                #        break
 
                 if command == 'attack':
                     if arg in rooms_dict[self.player.room].characters:
                         self.run_combat(self.player, self.character_dict[arg])
                     else:
                         self.output_buffer = 'Attack who?'
+                elif command == 'move':
+                    key = self.player.room.exits.get(arg, None)
+                    if key is not None:
+                        self.output_buffer = getattr(self.player, command)(rooms_dict[key])
+                    else:
+                        self.output_buffer = getattr(self.player, command)(None)
                 else:
                     self.output_buffer = getattr(self.player, command)(arg)
             except ValueError:
