@@ -1,7 +1,7 @@
 import socket
 from global_vars import item_dict, rooms_dict, training_dummy
 from character import Character
-from utilities import to_hit_roll, roll_d10, roll_d20
+from utilities import to_hit_roll, roll_d10, roll_d20, roll_d4
 #TODO: player inputs during combat
 #TODO: add server logging
 #TODO: fix kill player
@@ -49,6 +49,8 @@ class Server(object):
 
     game_name = "Realms of Venture and dragons"
     player = Character('Ghenghiz Cohen', rooms_dict[0], STR=5, DEX=5, INT=5, CON=5, CHA=5)
+    player.proficiency_skills['sword'] = 3
+    player.proficiency_skills['mace'] = 2
     character_dict = {'Ghengiz Cohen': player,
                        'training dummy': training_dummy}
     object_dicts = [character_dict, rooms_dict, item_dict]
@@ -161,7 +163,10 @@ class Server(object):
         return message
     
     def inflict_damage(self, attacker:Character, defender:Character)->str:
-        damage = roll_d10() + (attacker._Character__get_stat('strength') // 3) #damage roll
+        if not attacker.equipment['main hand']:
+            damage = roll_d4() + (attacker._Character__get_stat('strength') // 3)
+        else:
+            damage = roll_d10() + (attacker._Character__get_stat('strength') // 3) #damage roll
         defender.current_health -= damage
         message = f"{attacker.name} inflicts {damage} of damage onto {defender.name}."
         return message
