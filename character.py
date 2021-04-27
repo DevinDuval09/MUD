@@ -1,6 +1,6 @@
 '''character class'''
 from room import Room
-from items import Item, Container, Equipment
+from items import Item, Container, Equipment, Book
 #TODO: add character classes
 #TODO: add inventory command to review inventory
 #TODO: add customizable player descriptions
@@ -246,3 +246,7 @@ class Character(object):
                 if skill not in self.passive_skills:
                     setattr(self, skill.__name__, skill)
         return response
+    
+    def read(self, book:Book)->str:
+        effect = book.reading_effect(self)
+        return f'You read {book._description}. {effect}'
