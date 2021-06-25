@@ -41,8 +41,20 @@ class CommandsTest(ut.TestCase):
         self.assertIn("prevent you from doing that", response)
 
     def test_movement(self):
-        self.send_command("move north")
-        response = self.receive_response()
-        print(response)
-        self.assertIn("south", response)
+        north = "move north"
+        south = "move south"
+        east = "move east"
+        west = "move west"
+        self.send_command(north)
+        north_response = self.receive_response()
+        self.send_command(south)
+        south_response = self.receive_response()
+        self.send_command(east)
+        east_response = self.receive_response()
+        self.send_command(west)
+        west_response = self.receive_response()
+        self.assertIn("south", north_response)
+        self.assertIn("north", south_response)
+        self.assertIn("west", east_response)
+        self.assertIn("east", west_response)
 
