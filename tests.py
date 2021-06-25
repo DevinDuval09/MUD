@@ -3,6 +3,8 @@ import multiprocessing as mp
 import socket as sock
 import unittest as ut
 from server import Server
+from character import Character
+from global_vars import rooms_dict
 
 class CommandsTest(ut.TestCase):
     host = "127.0.0.1"
@@ -20,6 +22,8 @@ class CommandsTest(ut.TestCase):
     
     def setUp(self):
         self.server = Server(port=self.port)
+        test_character = Character("Player 1", rooms_dict[0], STR=3, DEX=3)
+        self.server.player = test_character
         self.server_process = mp.Process(target=self.server.serve, args=())
         self.server_process.start()
         self.client = sock.socket()
@@ -40,6 +44,12 @@ class CommandsTest(ut.TestCase):
         response = self.receive_response()
         self.assertIn("prevent you from doing that", response)
 
+    def test_look(self):
+        self.send_command("look")
+        response = self.receive_response()
+        self.assertIn("magic box", response)
+        self.assertIn("'north', 'west', 'east'", response)
+
     def test_movement(self):
         north = "move north"
         south = "move south"
@@ -57,4 +67,24 @@ class CommandsTest(ut.TestCase):
         self.assertIn("north", south_response)
         self.assertIn("west", east_response)
         self.assertIn("east", west_response)
+
+    def test_stats(self):
+        self.send_command("stats")
+        response = self.receive_response()
+        self.assertIn("strength: 3", response)
+        self.assertIn("dexterity: 3", response)
+        self.assertIn("wisdom: 1", response)
+
+    def test_grab(self):
+        self.send_command("look")
+        room_description = self.receive_response()
+        self.send_command("grab magic box")
+        response = self.receive_response()
+        print("Test print:\n", response)
+        print("\nRoom description:\n", room_description)
+        self.assertIn("pick up", response)
+        self.send_command("look")
+        response = self.receive_response()
+        self.assertNotIn("magic box", response)
+        
 
