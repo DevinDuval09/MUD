@@ -4,30 +4,43 @@ import socket as sock
 import unittest as ut
 from server import Server
 
+module_client = sock.socket()
+module_server = Server()
+module_server_process = mp.Process(target=module_server.serve, args=())
 
-class CommandsTest(ut.TestCase):
+def setUpModule():
     host = "127.0.0.1"
     port = 50000
-    server = Server(port=port)
-    server_process = mp.Process(target=server.serve, args=())
-    client = sock.socket()
-    
-    def setUp(self):
-        self.server_process.start()
-        self.client.connect((self.host, self.port)) 
+    module_server = Server(port=port)
+    module_server_process.start()
+    module_client.connect((host, port))
 
-    def tearDown(self) -> None:
-        self.server_process.kill()
-        return super().tearDown()
+def tearDownModule():
+    module_client.close()
+    module_server_process.kill()
+
+
+class CommandsTest(ut.TestCase):
+    server_process = None
+    server = module_server
+    client = module_client
 
     def send_command(self, command):
-        my_message = f"> {command}".encode('utf-8') + b'\n'
+        my_message = f"{command}".encode('utf-8') + b'\n'
         self.client.sendall(my_message)
 
     def receive_response(self):
         return self.client.recv(4096).decode()
     
-    def test_start_page(self):
+    def setUp(self):
         response = self.receive_response()
-        self.assertIn("In the room you see", response)
+        print(response)
+        self.assertIn("What be your name, adventurer?", response)
+        self.send_command("Player 1")
+        response = self.receive_response()
+        print(response)
+        self.assertIn("Player 1", response)
+    
+    def test_bad_commands(self):
+        pass
 
