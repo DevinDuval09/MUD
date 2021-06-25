@@ -2,9 +2,8 @@
 import multiprocessing as mp
 import socket as sock
 import unittest as ut
-from server import Server
+from server import Server, rooms_dict
 from character import Character
-from global_vars import rooms_dict
 
 class CommandsTest(ut.TestCase):
     host = "127.0.0.1"
@@ -22,7 +21,7 @@ class CommandsTest(ut.TestCase):
     
     def setUp(self):
         self.server = Server(port=self.port)
-        test_character = Character("Player 1", rooms_dict[0], STR=3, DEX=3)
+        test_character = Character("Player 1", self.server.object_dicts[1][0], STR=3, DEX=3)
         self.server.player = test_character
         self.server_process = mp.Process(target=self.server.serve, args=())
         self.server_process.start()
@@ -74,14 +73,29 @@ class CommandsTest(ut.TestCase):
         self.assertIn("strength: 3", response)
         self.assertIn("dexterity: 3", response)
         self.assertIn("wisdom: 1", response)
+    
+    def test_actions(self):
+        self.send_command("actions")
+        response = self.receive_response()
+        self.assertIn(self.server.player.actions(), response)
+    
+    def test_say(self):
+        self.send_command("say Hi")
+        response = self.receive_response()
+        self.assertIn("hi", response)
+    
+    def test_open(self):
+        self.send_command("open magic box")
+        response = self.receive_response()
+        print(response)
+        self.assertIn("You open the a magic box", response)
+        self.assertIn("magical crystal", response)
 
     def test_grab(self):
-        self.send_command("look")
-        room_description = self.receive_response()
+        print("\nPlayer room inventory:\n", self.server.player.room.inventory)
+        print("\nServer room inventory:\n", self.server.object_dicts[1][0].inventory)
         self.send_command("grab magic box")
         response = self.receive_response()
-        print("Test print:\n", response)
-        print("\nRoom description:\n", room_description)
         self.assertIn("pick up", response)
         self.send_command("look")
         response = self.receive_response()
