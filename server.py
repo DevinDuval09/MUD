@@ -75,6 +75,12 @@ class Server(object):
 
         self.client_connection, address = self.socket.accept()
 
+    def signin(self):
+        self.output_buffer = "What be your name, adventurer?"
+
+    def assign_player(self):
+        self.player.name = self.input_buffer
+
     def greet(self):
         """
         Welcome a client to the game.
@@ -137,7 +143,7 @@ class Server(object):
         self.output_buffer += '\n'
         response = response + self.output_buffer.encode('utf8')
         self.client_connection.sendall(response)
-    
+
     def kill_player(self, player:Character)->str:
         '''do all of the stuff that needs to happen on player death.
         mainly: equipment and inventory dump into the room they died.'''
@@ -287,6 +293,10 @@ class Server(object):
 
     def serve(self):
         self.connect()
+        self.signin()
+        self.push_output()
+        self.get_input()
+        self.assign_player()
         self.greet()
         self.push_output()
 
