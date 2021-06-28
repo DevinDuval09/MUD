@@ -92,8 +92,6 @@ class CommandsTest(ut.TestCase):
         self.assertIn("magical crystal", response)
 
     def test_grab(self):
-        print("\nPlayer room inventory:\n", self.server.player.room.inventory)
-        print("\nServer room inventory:\n", self.server.object_dicts[1][0].inventory)
         self.send_command("grab magic box")
         response = self.receive_response()
         self.assertIn("pick up", response)
