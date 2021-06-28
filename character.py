@@ -115,7 +115,9 @@ class Character(object):
             if isinstance(item, Container) and item._open:
                 available_stuff[item] = item.inventory
         for container, inventory in available_stuff.items():
-            if thing in inventory:
+            for item in inventory:
+                if thing._description == item._description:
+                    thing = item
                 container.inventory.remove(thing)
                 self.inventory.append(thing)
                 return f'You pick up a {thing._description} from {container._description}.'
