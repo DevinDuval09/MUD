@@ -1,4 +1,5 @@
 '''character class'''
+from logger import logger
 from room import Room
 from items import Item, Container, Equipment, Book
 #TODO: add character classes
@@ -47,8 +48,6 @@ class Character(object):
         attrs = dir(self)
         actions = []
         for attr in attrs:
-            print('attr: ', attr)
-            print('attr[1]: ', attr[1])
             if callable(getattr(self, attr)) and attr[1] != '_' and 'Character' not in attr:
                 actions.append(attr)
         actions.append('attack')
@@ -58,7 +57,7 @@ class Character(object):
         '''
         Calculate fully buffed value for stat
         '''
-        print('stat: ', stat)
+        logger.info('stat: %s' % stat)
         level = getattr(self, stat)
         for item in self.inventory:
             if not isinstance(item, Equipment):
@@ -66,7 +65,7 @@ class Character(object):
                     level += getattr(item, stat)
         for item in self.equipment.values():
             if item:
-                print('item: ', item._description)
+                logger.info('item: %s' % item._description)
                 if stat in dir(item):
                     level += getattr(item, stat)
         return level
@@ -100,11 +99,11 @@ class Character(object):
         summary += '\nProficiencies:'
         for proficiency, rating in self.proficiency_skills.items():
             summary += f'\n{proficiency}: {rating}'
-        print(f'{self.name}stats: \nsummary')
+        logger.info(f'{self.name}stats: \nsummary')
         return summary
     
     def grab(self, thing:Item)->str:
-        print('grab item: ', thing._description)
+        logger.info('grab item: %s' % thing._description)
         available_stuff = {self.room: self.room.inventory}
         for item in self.inventory:
             #check inventory for open containers
@@ -214,10 +213,10 @@ class Character(object):
         if not isinstance(item, Equipment):
             return f'How do you intend to equip a {item.description()}?'
         equipment = item
-        print('player equipment: ', equipment._description)
-        print('equipment slot: ', equipment.slot)
+        logger.info('player equipment: %s' % equipment._description)
+        logger.info('equipment slot: %s' % equipment.slot)
         if self.equipment[equipment.slot] is None:
-            #print(f'{self.name} inventory: ', self.inventory)
+            #logger.info(f'{self.name} inventory: ', self.inventory)
             self.inventory.remove(equipment)
             self.equipment[equipment.slot] = equipment
             response = f'You equipped the {equipment._description} on your {equipment.slot}.'
@@ -232,18 +231,18 @@ class Character(object):
             response = f'You must first remove {self.equipment[equipment.slot]._description} from your {equipment.slot}.'
         
         if 'remove' not in response:
-            print('equipment: ', equipment._description)
-            print('equipment skills: ', equipment.active_skills)
+            logger.info('equipment: %s' % equipment._description)
+            logger.info('equipment skills: %s' % equipment.active_skills)
             for skill in equipment.active_skills:
                 setattr(self, skill.__name__, skill)
                 self.active_skills[equipment._description] = skill.__name__
-            print('equipment skills: ', equipment.proficiency_skills)
+            logger.info('equipment skills: %s' % equipment.proficiency_skills)
             for skill, level in equipment.proficiency_skills.items():
                 if skill in self.proficiency_skills.keys():
                     self.proficiency_skills[skill] += level
                 else:
                     self.proficiency_skills[skill] = level
-            print('eqiupment skills: ', equipment.passive_skills)
+            logger.info('eqiupment skills: %s' % equipment.passive_skills)
             for skill in equipment.passive_skills:
                 if skill not in self.passive_skills:
                     setattr(self, skill.__name__, skill)
