@@ -3,6 +3,8 @@
 
 # GENERAL PYTHON FILES
 __pycache__/
+./logs/*
+./mud_venv/*
 
 #log files
 *.log
