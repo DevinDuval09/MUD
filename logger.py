@@ -1,8 +1,11 @@
 '''logger used by Users, UserCollection, UserStatus, and UserStatusCollection'''
 
 import logging
+import os
 import datetime
 
+if not os.path.isdir(".//logs"):
+    os.mkdir(".//logs//")
 
 def get_log_name():
     '''generate log name'''
