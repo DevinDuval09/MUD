@@ -261,11 +261,8 @@ class Server(object):
                 command, arg = client_input.lower().split(' ', 1)
                 logger.info('command, arg: %s, %s' % (command, arg))
                 for _dict in self.object_dicts:
-                    logger.info('keys: {}'.format(*_dict.keys()))
-                    logger.info('arg in keys: %s' % arg in _dict.keys())
                     if arg in _dict.keys():
                         arg = _dict[arg]
-                        logger.info(f'arg converted to object: {arg._description}.')
                         break
 
                 if command == 'attack':
