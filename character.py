@@ -57,7 +57,6 @@ class Character(object):
         '''
         Calculate fully buffed value for stat
         '''
-        logger.info('stat: %s' % stat)
         level = getattr(self, stat)
         for item in self.inventory:
             if not isinstance(item, Equipment):
@@ -68,6 +67,7 @@ class Character(object):
                 logger.info('item: %s' % item._description)
                 if stat in dir(item):
                     level += getattr(item, stat)
+        logger.info('stat:{:<15}{:>10}:{:>2}'.format(stat,"value", level))
         return level
 
     def stats(self):
@@ -99,7 +99,7 @@ class Character(object):
         summary += '\nProficiencies:'
         for proficiency, rating in self.proficiency_skills.items():
             summary += f'\n{proficiency}: {rating}'
-        logger.info(f'{self.name}stats: \nsummary')
+        logger.info('%s stats: \n%s' % (self.name, summary))
         return summary
     
     def grab(self, thing:Item)->str:
@@ -119,8 +119,10 @@ class Character(object):
                     thing = item
                 container.inventory.remove(thing)
                 self.inventory.append(thing)
+                logger.info('%s moved from %s to %s' % (thing._description, container._description, self.name))
                 return f'You pick up a {thing._description} from {container._description}.'
         else:
+            logger.info('{} not located in {}'.format(thing._description, available_stuff.keys()))
             return f'You must be halucinating. There is no {thing._description} in here.'
 
     def drop(self, item):
@@ -209,40 +211,41 @@ class Character(object):
         else:
             f'There is no {item}.'
     
-    def equip(self, item: Equipment)->str: #not working
+    def equip(self, item: Equipment)->str:
         if not isinstance(item, Equipment):
             return f'How do you intend to equip a {item.description()}?'
         equipment = item
-        logger.info('player equipment: %s' % equipment._description)
-        logger.info('equipment slot: %s' % equipment.slot)
+        logger.info('%s wants to equip %s in slot %s.' % (self.name, equipment._description, equipment.slot))
         if self.equipment[equipment.slot] is None:
-            #logger.info(f'{self.name} inventory: ', self.inventory)
             self.inventory.remove(equipment)
             self.equipment[equipment.slot] = equipment
+            logger.info('%s equipped.' % equipment._description)
             response = f'You equipped the {equipment._description} on your {equipment.slot}.'
         elif self.equipment[equipment.slot] and equipment.slot[-4:] == 'hand':
             if equipment.slot == 'main hand' and not self.equipment['off hand']:
                 self.equipment['off hand'] = equipment
+                logger.info('%s equipped.' % equipment._description)
                 response = f'You take hold of the {equipment._description} in your off hand.'
             if equipment.slot == 'off hand' and not self.equipment['main hand']:
                 self.equipment['main hand'] = equipment
+                logger.info('%s equipped.' % equipment._description)
                 response = f'You take hold of the {equipment._description} in your main hand.'
         else:
+            logger.info('%s already has %s in it. %s was not equipped.' % (equipment.slot, self.equipment[equipment.slot], equipment._description))
             response = f'You must first remove {self.equipment[equipment.slot]._description} from your {equipment.slot}.'
         
         if 'remove' not in response:
-            logger.info('equipment: %s' % equipment._description)
-            logger.info('equipment skills: %s' % equipment.active_skills)
+            logger.info('%s adding active skills: %s' % (equipment._description, equipment.active_skills))
             for skill in equipment.active_skills:
                 setattr(self, skill.__name__, skill)
                 self.active_skills[equipment._description] = skill.__name__
-            logger.info('equipment skills: %s' % equipment.proficiency_skills)
+            logger.info('%s adding proficiecny skills: %s' % (equipment._description, equipment.proficiency_skills))
             for skill, level in equipment.proficiency_skills.items():
                 if skill in self.proficiency_skills.keys():
                     self.proficiency_skills[skill] += level
                 else:
                     self.proficiency_skills[skill] = level
-            logger.info('eqiupment skills: %s' % equipment.passive_skills)
+            logger.info('%s adding passive skills: %s' % (equipment._description, equipment.passive_skills))
             for skill in equipment.passive_skills:
                 if skill not in self.passive_skills:
                     setattr(self, skill.__name__, skill)
