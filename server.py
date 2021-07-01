@@ -1,4 +1,5 @@
 import socket
+from logger import logger
 from global_vars import item_dict, rooms_dict, training_dummy
 from character import Character
 from utilities import to_hit_roll, roll_d10, roll_d20, roll_d4
@@ -147,20 +148,20 @@ class Server(object):
     def kill_player(self, player:Character)->str:
         '''do all of the stuff that needs to happen on player death.
         mainly: equipment and inventory dump into the room they died.'''
-        print(f'{player.name} died.')
-        print(f'{player.name} inventory: {[item._description for item in player.inventory]}')
-        print(f'{player.name} equipment: {[item._description for item in player.equipment.values() if bool(item) is True]}')
+        logger.info(f'{player.name} died.')
+        logger.info(f'{player.name} inventory: {[item._description for item in player.inventory]}')
+        logger.info(f'{player.name} equipment: {[item._description for item in player.equipment.values() if bool(item) is True]}')
         message = f"{player.name} falls to the ground, pooping his pants in death.\nHe drops {[item._description for item in player.inventory]} and {[item._description for item in player.equipment.values() if bool(item) is True]}."
-        print('message created')
+        logger.info('message created')
         for item in player.inventory:
             player.inventory.remove(item)
             player.room.inventory.append(item)
-        print('player inventory dropped')
+        logger.info('player inventory dropped')
         for slot, equipment in player.equipment.items():
             if equipment:
                 player.room.inventory.append(equipment)
                 player[slot] = None
-        print('player equipment dropped')
+        logger.info('player equipment dropped')
         #for key, room in rooms_dict.items():
         #    if room is player.room:
         #        room.characters.remove(player)
@@ -178,8 +179,8 @@ class Server(object):
         return message
     
     def combat_exchange(self, attacker:Character, defender:Character, to_hit_rolls:dict)->str:
-        print('to hit stats for attacker: ', to_hit_rolls[attacker])
-        print('armor calc for defender: ', defender._Character__get_stat('armor') + defender._Character__get_stat('dexterity') // 3)
+        logger.info('to hit stats for attacker: %s' % to_hit_rolls[attacker])
+        logger.info("armor calc for defender: %s" % {defender._Character__get_stat('armor') + defender._Character__get_stat('dexterity') // 3})
         if to_hit_rolls[attacker] >= (defender._Character__get_stat('armor') + (defender._Character__get_stat('dexterity') // 3)): #defender defense calc
             message = self.inflict_damage(attacker, defender)
         else:
@@ -193,7 +194,7 @@ class Server(object):
             init_rolls = {}
             to_hit_rolls = {}
             for character in [attacker, defender]:
-                print('main weapon: ', character.equipment['main hand'])
+                logger.info('main weapon: %s' % character.equipment['main hand'])
                 if character.equipment['main hand']:
                     weapon = character.equipment['main hand']
                     hit_bonus[character] = character.proficiency_skills.get(weapon.associated_skill, 0)
@@ -204,7 +205,7 @@ class Server(object):
             for character in [attacker, defender]:
                 to_hit_rolls[character] = roll_d20() + hit_bonus[character]
             # first player attacks
-            print('Creating players_turn_order')
+            logger.info('Creating players_turn_order')
             players_turn_order = []
             if init_rolls[attacker] >= init_rolls[defender]:
                 players_turn_order = [attacker, defender]
@@ -229,16 +230,16 @@ class Server(object):
             message = self.combat_exchange(players_turn_order[1], players_turn_order[0], to_hit_rolls)
             self.output_buffer = message
             self.push_output()
-            print('attacker life: ', attacker.current_health)
-            print('defender life: ', defender.current_health)
+            logger.info('attacker life: %s' % attacker.current_health)
+            logger.info('defender life: %s' % defender.current_health)
 
             if players_turn_order[0].current_health <= 0:
-                #print that someone died
+                #logger.info that someone died
                 self.output_buffer = self.kill_player(players_turn_order[0])
                 self.push_output()
                 break
-            print('attacker health: ', attacker.current_health)
-            print('defender health: ', defender.current_health)
+            logger.info('attacker health: %s' % attacker.current_health)
+            logger.info('defender health: %s' % defender.current_health)
     
     def route(self):
         """
@@ -252,19 +253,16 @@ class Server(object):
         :return: None
         """
         client_input = self.input_buffer.strip().lower()
-        print('client_input:', client_input)
+        logger.info('client_input: %s' % client_input)
         if client_input == 'quit':
             self.quit()
         else:
             try:
                 command, arg = client_input.lower().split(' ', 1)
-                print('command, arg:', [command, arg])
+                logger.info('command, arg: %s, %s' % (command, arg))
                 for _dict in self.object_dicts:
-                    print('keys: ', _dict.keys())
-                    print('arg in keys: ', arg in _dict.keys())
                     if arg in _dict.keys():
                         arg = _dict[arg]
-                        print(f'arg converted to object: {arg._description}.')
                         break
 
                 if command == 'attack':
@@ -292,6 +290,7 @@ class Server(object):
                 self.output_buffer = f"You desparately try to {command}, but the AttributeErrors are too powerful."
 
     def serve(self):
+        logger.info("Staring server")
         self.connect()
         self.signin()
         self.push_output()

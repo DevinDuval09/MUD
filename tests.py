@@ -2,10 +2,12 @@
 import multiprocessing as mp
 import socket as sock
 import unittest as ut
+from logger import logger
 from server import Server, rooms_dict
 from character import Character
 
 class CommandsTest(ut.TestCase):
+    logger.info("Running CommandsTest")
     host = "127.0.0.1"
     port = 50000
     server_process = None
@@ -87,7 +89,6 @@ class CommandsTest(ut.TestCase):
     def test_open(self):
         self.send_command("open magic box")
         response = self.receive_response()
-        print(response)
         self.assertIn("You open the a magic box", response)
         self.assertIn("magical crystal", response)
 
@@ -98,5 +99,4 @@ class CommandsTest(ut.TestCase):
         self.send_command("look")
         response = self.receive_response()
         self.assertNotIn("magic box", response)
-        
 
