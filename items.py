@@ -1,6 +1,5 @@
 '''track item information'''
-#TODO: add equipment subclass
-#TODO: add skills that give bonus
+from logger import logger
 #TODO: passive vs active skills
 from types import MethodType
 stats_list = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'armor']
@@ -54,23 +53,26 @@ class Book(Item):
             if effect:
                 if effect == 'stats':
                     my_stats = [stat for stat in stats_list if stat in dir(self)]
+                    logger.info('Adding following stats to player: %s' % my_stats)
                     my_values = [getattr(self, stat) for stat in my_stats]
                     for stat, value in zip(my_stats, my_values):
                         message += f'feel your {stat} increasing '
                         setattr(player, stat, getattr(player, stat) + value)
                 elif effect == 'passive_skills':
+                    logger.info('Adding these passive skills to player: '.format(*self.passive_skills))
                     for skill in self.passive_skills:
                         if skill not in player.passive_skills:
                             message += f'suddenly understand the art of {skill.__name__}'
                             player.passive_skills.append(skill)
                 elif effect == 'active_skills':
+                    logger.info('Adding these active skills to player: '.format(*self.active_skills))
                     for skill in self.active_skills:
                         if skill.__name__ not in dir(player):
                             message += f'think you can now {skill.__name__}'
                             setattr(player, skill.__name__, MethodType(skill, player))
                             print(getattr(player, skill.__name__))
                 elif effect == 'proficiency_skills':
-                    print('in proficiency_skills loop')
+                    logger.info('Adding these proficiency skills: '.format(*self.proficiency_skills))
                     for skill, rating in self.proficiency_skills.items():
                         print('skill: ', skill)
                         print('rating: ', rating)
@@ -82,6 +84,7 @@ class Book(Item):
                 else:
                     message += 'realize it is gibberish'
             else:
+                logger.info("No effects added to player.")
                 message += 'think it is a bit of a bore'
             message += '.'
         return message
