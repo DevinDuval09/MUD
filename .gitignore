@@ -3,3 +3,6 @@
 
 # GENERAL PYTHON FILES
 __pycache__/
+
+#log files
+*.log
