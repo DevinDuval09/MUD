@@ -2,8 +2,9 @@ import socket
 import sys
 import asyncio
 from os import system
-#TODO: make client async
-#system('python -m serve')
+
+# TODO: make client async
+# system('python -m serve')
 
 try:
     port = int(sys.argv[1])
@@ -17,15 +18,19 @@ except IndexError:
 
 client_socket = socket.socket()
 client_socket.connect((host, port))
+
+
 async def send_command():
-    my_message = input("> ").encode('utf-8') + b'\n'
+    my_message = input("> ").encode("utf-8") + b"\n"
     client_socket.sendall(my_message)
-    await asyncio.sleep(.25)
+    await asyncio.sleep(0.25)
+
 
 async def receive_response():
     response = client_socket.recv(4096).decode()
     print(response)
-    await asyncio.sleep(.25)
+    await asyncio.sleep(0.25)
+
 
 async def main():
     while True:
@@ -38,6 +43,5 @@ async def main():
             print("Connection closed by host.")
             break
 
+
 asyncio.run(main())
-
-
