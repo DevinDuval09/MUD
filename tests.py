@@ -20,8 +20,9 @@ class MongoTest(ut.TestCase):
             room.save()
 
     def test_character_fromId(self):
-        training_dummy1 = Character.fromId("training dummy")
-        self.assertEqual(training_dummy.name, training_dummy1.name)
+        test_dummy = Character.fromId("training dummy")
+        self.assertEqual(training_dummy.name, test_dummy.name)
+        self.assertEqual(training_dummy.room, test_dummy.room)
 
 class CommandsTest(ut.TestCase):
     logger.info("Running CommandsTest")
