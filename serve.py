@@ -20,12 +20,11 @@ except IndexError:
     port = 50000
 
 server = Server(port)
-#server_proc = Process(target=server.serve, args=())
+# server_proc = Process(target=server.serve, args=())
 server.serve()
 
-if __name__ == '__main__':
-    #server_proc.start()
-    #server_proc.join()
+if __name__ == "__main__":
+    # server_proc.start()
+    # server_proc.join()
     server.serve()
     sleep(1)
-
